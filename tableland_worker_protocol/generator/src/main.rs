@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-
 use fp_bindgen::{prelude::*, types::CargoDependency};
 use once_cell::sync::Lazy;
 use std::collections::{BTreeMap, BTreeSet};
@@ -53,7 +52,7 @@ fn main() {
         // BindingsType::RustWasmerRuntime,
         BindingsType::RustWasmerWasiRuntime,
     ] {
-        let output_path = format!("bindings/{bindings_type}");
+        let output_path = format!("../bindings/{bindings_type}");
 
         fp_bindgen!(BindingConfig {
             bindings_type,

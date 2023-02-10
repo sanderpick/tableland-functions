@@ -1,11 +1,12 @@
 [workspace]
 exclude = [
-    "tableland_worker_protocol/bindings/rust-plugin",
     "examples/ssr",
 ]
 members = [
     "tableland_client",
     "tableland_worker_protocol",
+    "tableland_worker_protocol/generator",
+    "tableland_worker_protocol/bindings/rust-plugin",
     "tableland_worker_runtime"
 ]
 
