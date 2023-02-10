@@ -13,4 +13,5 @@ version = { workspace = true }
 fp-bindgen = {git = "https://github.com/sanderpick/fp-bindgen", branch = "sander/cargo-dep-git-helpers"}
 serde = { version = "1.0", features = ["derive"] }
 serde_bytes = "0.11"
+serde_json = "1"
 thiserror = "1.0"
