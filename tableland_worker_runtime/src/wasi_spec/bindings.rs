@@ -1,0 +1,1 @@
+../../../tableland_worker_protocol/bindings/rust-wasmer-wasi-runtime/bindings.rs

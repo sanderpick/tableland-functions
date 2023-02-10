@@ -1,0 +1,20 @@
+[workspace]
+exclude = [
+    "tableland_worker_protocol/bindings/rust-plugin",
+    "examples/ssr",
+]
+members = [
+    "tableland_client",
+    "tableland_worker_protocol",
+    "tableland_worker_runtime"
+]
+
+[workspace.package]
+authors = ["Textile <contact@textile.io"]
+description = "A Rust SDK and runtime for Tableland Workers."
+edition = "2021"
+homepage = "https://github.com/sanderpick/tableland-worker/"
+license = "MIT OR Apache-2.0"
+readme = "./README.md"
+repository = "https://github.com/sanderpick/tableland-worker/"
+version = "0.1.0"
