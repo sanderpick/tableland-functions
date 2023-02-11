@@ -1,8 +1,7 @@
+use crate::{Error, Headers};
 use fp_bindgen::prelude::Serializable;
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
-// use crate::cors::Cors;
-use super::Error;
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize, Serializable)]
 #[fp(rust_module = "tableland_worker_protocol")]
@@ -15,11 +14,12 @@ const CONTENT_TYPE: &str = "content-type";
 
 /// A [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) representation for
 /// working with or returning a response to a `Request`.
+/// Taken from https://github.com/cloudflare/workers-rs/blob/main/worker/src/request.rs.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize, Serializable)]
 #[fp(rust_module = "tableland_worker_protocol")]
 pub struct Response {
     body: ResponseBody,
-    // headers: Headers,
+    headers: Headers,
     status_code: u16,
 }
 
@@ -45,13 +45,13 @@ impl Response {
     /// Create a `Response` using the body encoded as HTML. Sets the associated `Content-Type`
     /// header for the `Response` as `text/html`.
     pub fn from_html(html: impl AsRef<str>) -> Result<Self, Error> {
-        // let mut headers = Headers::new();
-        // headers.set(CONTENT_TYPE, "text/html")?;
+        let mut headers = Headers::new();
+        headers.insert(CONTENT_TYPE.to_string(), "text/html".to_string());
 
         let data = html.as_ref().as_bytes();
         Ok(Self {
             body: ResponseBody::Body(ByteBuf::from(data)),
-            // headers,
+            headers,
             status_code: 200,
         })
     }
@@ -59,12 +59,15 @@ impl Response {
     /// Create a `Response` using unprocessed bytes provided. Sets the associated `Content-Type`
     /// header for the `Response` as `application/octet-stream`.
     pub fn from_bytes(bytes: Vec<u8>) -> Result<Self, Error> {
-        // let mut headers = Headers::new();
-        // headers.set(CONTENT_TYPE, "application/octet-stream")?;
+        let mut headers = Headers::new();
+        headers.insert(
+            CONTENT_TYPE.to_string(),
+            "application/octet-stream".to_string(),
+        );
 
         Ok(Self {
             body: ResponseBody::Body(ByteBuf::from(bytes)),
-            // headers,
+            headers,
             status_code: 200,
         })
     }
@@ -74,7 +77,7 @@ impl Response {
     pub fn from_body(body: ResponseBody) -> Result<Self, Error> {
         Ok(Self {
             body,
-            // headers: Headers::new(),
+            headers: Headers::new(),
             status_code: 200,
         })
     }
@@ -82,12 +85,12 @@ impl Response {
     /// Create a `Response` using unprocessed text provided. Sets the associated `Content-Type`
     /// header for the `Response` as `text/plain`.
     pub fn ok(body: impl Into<String>) -> Result<Self, Error> {
-        // let mut headers = Headers::new();
-        // headers.set(CONTENT_TYPE, "text/plain")?;
+        let mut headers = Headers::new();
+        headers.insert(CONTENT_TYPE.to_string(), "text/plain".to_string());
 
         Ok(Self {
             body: ResponseBody::Body(ByteBuf::from(body.into().into_bytes())),
-            // headers,
+            headers,
             status_code: 200,
         })
     }
@@ -96,7 +99,7 @@ impl Response {
     pub fn empty() -> Result<Self, Error> {
         Ok(Self {
             body: ResponseBody::Empty,
-            // headers: Headers::new(),
+            headers: Headers::new(),
             status_code: 200,
         })
     }
@@ -112,7 +115,7 @@ impl Response {
 
         Ok(Self {
             body: ResponseBody::Body(ByteBuf::from(msg.into().into_bytes())),
-            // headers: Headers::new(),
+            headers: Headers::new(),
             status_code: status,
         })
     }
@@ -149,11 +152,11 @@ impl Response {
         }
     }
 
-    // Set this response's `Headers`.
-    // pub fn with_headers(mut self, headers: Headers) -> Self {
-    //     self.headers = headers;
-    //     self
-    // }
+    /// Set this response's `Headers`.
+    pub fn with_headers(mut self, headers: Headers) -> Self {
+        self.headers = headers;
+        self
+    }
 
     /// Set this response's status code.
     /// The Workers platform will reject HTTP status codes outside the range of 200..599 inclusive,
@@ -179,10 +182,10 @@ impl Response {
     //     Ok(self.with_headers(headers))
     // }
 
-    // Read the `Headers` on this response.
-    // pub fn headers(&self) -> &Headers {
-    //     &self.headers
-    // }
+    /// Read the `Headers` on this response.
+    pub fn headers(&self) -> &Headers {
+        &self.headers
+    }
 
     // Get a mutable reference to the `Headers` on this response.
     // pub fn headers_mut(&mut self) -> &mut Headers {

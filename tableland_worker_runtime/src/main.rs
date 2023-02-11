@@ -11,9 +11,11 @@ use crate::wasi_spec::bindings::Runtime;
 use crate::wasi_spec::types::*;
 use bytes::BufMut;
 use futures::TryStreamExt;
+use http::{header::HeaderName, HeaderMap, HeaderValue};
 use sha2::{Digest, Sha256};
-use std::{convert::Infallible, env, str};
+use std::convert::Infallible;
 use warp::{
+    http::Response as WarpResponse,
     http::StatusCode,
     multipart::{FormData, Part},
     path::FullPath,
@@ -27,8 +29,15 @@ async fn main() {
         .and(warp::multipart::form().max_length(5_000_000))
         .and_then(stage);
     let run_route = warp::path("worker")
+        .and(warp::get())
         .and(warp::path::full())
         .and(warp::path::param())
+        .and(
+            warp::query::raw()
+                .or(warp::any().map(|| String::default()))
+                .unify(),
+        )
+        .and(warp::header::headers_cloned())
         .and_then(run);
 
     let router = stage_route.or(run_route).recover(handle_rejection);
@@ -59,7 +68,7 @@ async fn stage(form: FormData) -> Result<impl Reply, Rejection> {
             let hash = Sha256::new().chain_update(&value).finalize();
 
             let name = hex::encode(hash);
-            let file_name = format!("./workers/{}.wasm", name);
+            let file_name = format!("./tableland_worker_runtime/workers/{}.wasm", name);
             tokio::fs::write(&file_name, value).await.map_err(|e| {
                 eprint!("error writing file: {}", e);
                 warp::reject::reject()
@@ -71,7 +80,12 @@ async fn stage(form: FormData) -> Result<impl Reply, Rejection> {
     Ok("success")
 }
 
-async fn run(path: FullPath, hash: String) -> Result<impl Reply, Rejection> {
+async fn run(
+    full_path: FullPath,
+    hash: String,
+    query: String,
+    headers: HeaderMap,
+) -> Result<impl Reply, Rejection> {
     let file_name = format!("./tableland_worker_runtime/workers/{}.wasm", hash);
     let worker = tokio::fs::read(&file_name).await.map_err(|e| {
         eprint!("error reading worker file: {}", e);
@@ -87,7 +101,14 @@ async fn run(path: FullPath, hash: String) -> Result<impl Reply, Rejection> {
         warp::reject::reject()
     })?;
 
-    let req = Request::new(path.as_str(), Method::Get, None);
+    let mut path = full_path
+        .as_str()
+        .trim_start_matches(format!("/worker/{}", hash).as_str())
+        .to_string();
+    if query.len() > 0 {
+        path = format!("{}?{}", path, query);
+    }
+    let req = Request::new(path, Method::Get, from_header_map(headers), None);
     let mut res = rt
         .fetch(req)
         .await
@@ -105,10 +126,36 @@ async fn run(path: FullPath, hash: String) -> Result<impl Reply, Rejection> {
         warp::reject::reject()
     })?;
 
-    Ok(warp::http::Response::builder()
-        .header("content-type", "text/html")
-        .status(200)
-        .body(body))
+    let wres = WarpResponse::builder()
+        .status(res.status_code())
+        .body(body)
+        .unwrap();
+    let (mut parts, body) = wres.into_parts();
+    parts.headers = to_header_map(res.headers());
+    Ok(WarpResponse::from_parts(parts, body))
+}
+
+fn from_header_map(h: HeaderMap) -> Headers {
+    let mut headers = Headers::new();
+    for (k, v) in h.iter() {
+        let sv = match v.to_str() {
+            Ok(sv) => sv,
+            _ => continue,
+        };
+        headers.insert(k.to_string(), sv.to_string());
+    }
+    return headers;
+}
+
+fn to_header_map(h: &Headers) -> HeaderMap {
+    let mut headers = HeaderMap::new();
+    for (k, v) in h.iter() {
+        headers.insert(
+            HeaderName::from_bytes(k.as_bytes()).unwrap(),
+            HeaderValue::from_str(v.as_str()).unwrap(),
+        );
+    }
+    return headers;
 }
 
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {

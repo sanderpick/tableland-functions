@@ -1,9 +1,7 @@
+use crate::{Headers, Method};
 use fp_bindgen::prelude::Serializable;
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
-// use http::{Uri, HeaderMap};
-use super::Method;
-// use super::Result;
 
 /// A [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) representation for
 /// handling incoming and creating outbound HTTP requests.
@@ -13,24 +11,25 @@ use super::Method;
 pub struct Request {
     method: Method,
     path: String,
-    // headers: Headers,
+    headers: Headers,
     body: Option<ByteBuf>,
 }
 
 impl Request {
     /// Construct a new `Request` with an HTTP Method.
-    pub fn new(path: &str, method: Method, body: Option<ByteBuf>) -> Self {
+    pub fn new(path: String, method: Method, headers: Headers, body: Option<ByteBuf>) -> Self {
         Request {
+            path: path,
             method,
-            path: path.to_string(),
+            headers,
             body,
         }
     }
 
     /// Get the `Headers` for this request.
-    // pub fn headers(&self) -> &Headers {
-    //     &self.headers
-    // }
+    pub fn headers(&self) -> Headers {
+        self.headers.clone()
+    }
 
     /// The HTTP Method associated with this `Request`.
     pub fn method(&self) -> Method {

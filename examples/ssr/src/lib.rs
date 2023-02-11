@@ -12,24 +12,19 @@ fn init_panic_hook() {
 }
 
 #[derive(Serialize, Deserialize)]
-struct Person {
-    name: String,
-    sex: String,
-    age: u8,
-}
-
-#[derive(Serialize, Deserialize)]
 struct Pet {
     name: String,
     r#type: String,
     owner_name: String,
 }
 
+const QUERY: &str = "select * from pets_31337_5;";
+
 #[fp_export_impl(bindings)]
 async fn fetch(request: Request) -> Result<Response, Error> {
     log(format!("{:?}", request));
 
-    let data = query("select * from pets_31337_5;".to_string()).await?;
+    let data = query(QUERY.to_string()).await?;
     let pets: Vec<Pet> = serde_json::from_value(data)?;
     let markup = html! {
         (DOCTYPE)
