@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use client_types::ReadOptions;
 use fp_bindgen::{prelude::*, types::CargoDependency};
 use once_cell::sync::Lazy;
 use std::collections::{BTreeMap, BTreeSet};
@@ -9,7 +10,7 @@ fp_import! {
     fn log(message: String);
 
     /// Tableland query endpoint for plugins.
-    async fn query(statement: String) -> Result<serde_json::Value, Error>;
+    async fn query(statement: String, options: ReadOptions) -> Result<serde_json::Value, Error>;
 }
 
 fp_export! {
@@ -31,10 +32,13 @@ static PLUGIN_DEPENDENCIES: Lazy<BTreeMap<&str, CargoDependency>> = Lazy::new(||
             CargoDependency::with_path("../../../tableland_worker_protocol"),
         ),
         (
+            "client_types",
+            CargoDependency::with_path("../../../tableland_client/client_types"),
+        ),
+        (
             "fp-bindgen-support",
-            CargoDependency::with_git_and_branch_and_features(
-                "https://github.com/sanderpick/fp-bindgen",
-                "sander/cargo-dep-git-helpers",
+            CargoDependency::with_git_and_features(
+                "https://github.com/fiberplane/fp-bindgen",
                 BTreeSet::from(["async", "guest"]),
             ),
         ),

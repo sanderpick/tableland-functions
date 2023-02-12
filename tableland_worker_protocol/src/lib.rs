@@ -1,9 +1,5 @@
 mod error;
 pub use error::*;
-mod headers;
-pub use headers::*;
-mod method;
-pub use method::*;
 mod request;
 pub use request::*;
 mod response;

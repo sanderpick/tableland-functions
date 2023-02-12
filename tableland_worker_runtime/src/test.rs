@@ -7,6 +7,7 @@ use crate::wasi_spec::bindings::Runtime;
 #[cfg(feature = "wasi")]
 use crate::wasi_spec::types::*;
 use anyhow::Result;
+use http::{HeaderMap, Method};
 
 #[cfg(not(feature = "wasi"))]
 const WASM_BYTES: &'static [u8] =
@@ -17,13 +18,8 @@ const WASM_BYTES: &'static [u8] =
 
 #[tokio::test]
 async fn fetch() -> Result<()> {
-    let uri: http::Uri = "https://example.org/hello/world?foo=bar".parse().unwrap();
-    let req = Request::new(
-        uri.path_and_query().unwrap().to_string(),
-        Method::Get,
-        Headers::new(),
-        None,
-    );
+    let uri: http::Uri = "/hello/world?foo=bar".parse().unwrap();
+    let req = Request::new(uri, Method::GET, HeaderMap::new(), None);
 
     let rt = new_runtime()?;
     let mut res = rt.fetch(req).await??;

@@ -6,4 +6,4 @@ pub fn log(message: String);
 
 /// Tableland query endpoint for plugins.
 #[fp_bindgen_support::fp_import_signature]
-pub async fn query(statement: String) -> Result<serde_json::Value, Error>;
+pub async fn query(statement: String, options: ReadOptions) -> Result<serde_json::Value, Error>;

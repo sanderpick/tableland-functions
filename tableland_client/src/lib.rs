@@ -1,8 +1,7 @@
 pub mod chains;
-
+use client_types::*;
 use reqwest::{Client, Error};
 use serde_json::Value as JsonValue;
-use std::fmt;
 use std::time::Duration;
 
 const QUERY_PATH: &str = "/api/v1/query";
@@ -10,34 +9,6 @@ const QUERY_PATH: &str = "/api/v1/query";
 pub struct TablelandClient {
     http_client: Client,
     chain: chains::Chain,
-}
-
-#[derive(Debug)]
-pub enum Format {
-    Objects,
-    Table,
-}
-
-impl fmt::Display for Format {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        write!(formatter, "{}", format!("{:?}", self).to_lowercase())
-    }
-}
-
-pub struct ReadOptions {
-    format: Format,
-    extract: bool,
-    unwrap: bool,
-}
-
-impl Default for ReadOptions {
-    fn default() -> Self {
-        ReadOptions {
-            format: Format::Objects,
-            extract: false,
-            unwrap: false,
-        }
-    }
 }
 
 impl TablelandClient {

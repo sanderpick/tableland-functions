@@ -110,9 +110,10 @@ pub fn _log(env: &RuntimeInstanceData, message: FatPtr) {
     let result = super::log(message);
 }
 
-pub fn _query(env: &RuntimeInstanceData, statement: FatPtr) -> FatPtr {
+pub fn _query(env: &RuntimeInstanceData, statement: FatPtr, options: FatPtr) -> FatPtr {
     let statement = import_from_guest::<String>(env, statement);
-    let result = super::query(statement);
+    let options = import_from_guest::<ReadOptions>(env, options);
+    let result = super::query(statement, options);
     let env = env.clone();
     let async_ptr = create_future_value(&env);
     let handle = tokio::runtime::Handle::current();

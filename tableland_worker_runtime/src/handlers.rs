@@ -9,7 +9,7 @@ use crate::wasi_spec::types::*;
 use crate::worker::*;
 use bytes::BufMut;
 use futures::TryStreamExt;
-use http::{header::HeaderName, HeaderMap, HeaderValue};
+use http::{HeaderMap, Method, Uri};
 use sha2::{Digest, Sha256};
 use warp::{
     http::Response as WarpResponse,
@@ -46,7 +46,6 @@ pub async fn stage(worker: Worker, form: FormData) -> Result<impl Reply, Rejecti
                 eprint!("error writing file: {}", e);
                 warp::reject::reject()
             })?;
-            println!("created file: {:?}", name);
 
             worker.set(name.clone(), value).await.map_err(|e| {
                 eprint!("error caching wasm runtime: {}", e);
@@ -92,7 +91,11 @@ pub async fn run(
     if query.len() > 0 {
         path = format!("{}?{}", path, query);
     }
-    let req = Request::new(path, Method::Get, from_header_map(headers), None);
+    if path.is_empty() {
+        path = "/".to_string();
+    }
+    let uri = path.parse::<Uri>().unwrap();
+    let req = Request::new(uri, Method::GET, headers, None);
     let mut res = rt
         .fetch(req)
         .await
@@ -115,29 +118,6 @@ pub async fn run(
         .body(body)
         .unwrap();
     let (mut parts, body) = wres.into_parts();
-    parts.headers = to_header_map(res.headers());
+    parts.headers = res.headers().clone();
     Ok(WarpResponse::from_parts(parts, body))
-}
-
-fn from_header_map(h: HeaderMap) -> Headers {
-    let mut headers = Headers::new();
-    for (k, v) in h.iter() {
-        let sv = match v.to_str() {
-            Ok(sv) => sv,
-            _ => continue,
-        };
-        headers.insert(k.to_string(), sv.to_string());
-    }
-    return headers;
-}
-
-fn to_header_map(h: &Headers) -> HeaderMap {
-    let mut headers = HeaderMap::new();
-    for (k, v) in h.iter() {
-        headers.insert(
-            HeaderName::from_bytes(k.as_bytes()).unwrap(),
-            HeaderValue::from_str(v.as_str()).unwrap(),
-        );
-    }
-    return headers;
 }

@@ -1,9 +1,11 @@
 [workspace]
 exclude = [
     "examples/ssr",
+    "examples/json_api",
 ]
 members = [
     "tableland_client",
+    "tableland_client/client_types",
     "tableland_worker_protocol",
     "tableland_worker_protocol/generator",
     "tableland_worker_protocol/bindings/rust-plugin",

@@ -1,5 +1,6 @@
-use crate::{Error, Headers};
+use crate::Error;
 use fp_bindgen::prelude::Serializable;
+use http::{HeaderMap, HeaderValue};
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
@@ -19,34 +20,40 @@ const CONTENT_TYPE: &str = "content-type";
 #[fp(rust_module = "tableland_worker_protocol")]
 pub struct Response {
     body: ResponseBody,
-    headers: Headers,
+    #[serde(
+        deserialize_with = "fp_bindgen_support::http::deserialize_header_map",
+        serialize_with = "fp_bindgen_support::http::serialize_header_map"
+    )]
+    headers: HeaderMap,
     status_code: u16,
 }
 
 impl Response {
-    // Create a `Response` using `B` as the body encoded as JSON. Sets the associated
-    // `Content-Type` header for the `Response` as `application/json`.
-    // pub fn from_json<B: Serialize>(value: &B) -> Result<Self> {
-    //     if let Ok(data) = serde_json::to_string(value) {
-    //         let mut headers = Headers::new();
-    //         headers.set(CONTENT_TYPE, "application/json")?;
-    //
-    //         return Ok(Self {
-    //             body: ResponseBody::Body(data.into_bytes()),
-    //             headers,
-    //             status_code: 200,
-    //             websocket: None,
-    //         });
-    //     }
-    //
-    //     Err(Error::Json(("Failed to encode data to json".into(), 500)))
-    // }
+    /// Create a `Response` using `B` as the body encoded as JSON. Sets the associated
+    /// `Content-Type` header for the `Response` as `application/json`.
+    pub fn from_json<B: Serialize>(value: &B) -> Result<Self, Error> {
+        if let Ok(data) = serde_json::to_string(value) {
+            let mut headers = HeaderMap::new();
+            headers.insert(
+                CONTENT_TYPE,
+                HeaderValue::from_str("application/json").unwrap(),
+            );
+
+            return Ok(Self {
+                body: ResponseBody::Body(ByteBuf::from(data)),
+                headers,
+                status_code: 200,
+            });
+        }
+
+        Err(Error::Internal("Failed to encode data to json".to_string()))
+    }
 
     /// Create a `Response` using the body encoded as HTML. Sets the associated `Content-Type`
     /// header for the `Response` as `text/html`.
     pub fn from_html(html: impl AsRef<str>) -> Result<Self, Error> {
-        let mut headers = Headers::new();
-        headers.insert(CONTENT_TYPE.to_string(), "text/html".to_string());
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, HeaderValue::from_str("text/html").unwrap());
 
         let data = html.as_ref().as_bytes();
         Ok(Self {
@@ -59,10 +66,10 @@ impl Response {
     /// Create a `Response` using unprocessed bytes provided. Sets the associated `Content-Type`
     /// header for the `Response` as `application/octet-stream`.
     pub fn from_bytes(bytes: Vec<u8>) -> Result<Self, Error> {
-        let mut headers = Headers::new();
+        let mut headers = HeaderMap::new();
         headers.insert(
-            CONTENT_TYPE.to_string(),
-            "application/octet-stream".to_string(),
+            CONTENT_TYPE,
+            HeaderValue::from_str("application/octet-stream").unwrap(),
         );
 
         Ok(Self {
@@ -77,7 +84,7 @@ impl Response {
     pub fn from_body(body: ResponseBody) -> Result<Self, Error> {
         Ok(Self {
             body,
-            headers: Headers::new(),
+            headers: HeaderMap::new(),
             status_code: 200,
         })
     }
@@ -85,8 +92,8 @@ impl Response {
     /// Create a `Response` using unprocessed text provided. Sets the associated `Content-Type`
     /// header for the `Response` as `text/plain`.
     pub fn ok(body: impl Into<String>) -> Result<Self, Error> {
-        let mut headers = Headers::new();
-        headers.insert(CONTENT_TYPE.to_string(), "text/plain".to_string());
+        let mut headers = HeaderMap::new();
+        headers.insert(CONTENT_TYPE, HeaderValue::from_str("text/plain").unwrap());
 
         Ok(Self {
             body: ResponseBody::Body(ByteBuf::from(body.into().into_bytes())),
@@ -99,7 +106,7 @@ impl Response {
     pub fn empty() -> Result<Self, Error> {
         Ok(Self {
             body: ResponseBody::Empty,
-            headers: Headers::new(),
+            headers: HeaderMap::new(),
             status_code: 200,
         })
     }
@@ -115,7 +122,7 @@ impl Response {
 
         Ok(Self {
             body: ResponseBody::Body(ByteBuf::from(msg.into().into_bytes())),
-            headers: Headers::new(),
+            headers: HeaderMap::new(),
             status_code: status,
         })
     }
@@ -153,7 +160,7 @@ impl Response {
     }
 
     /// Set this response's `Headers`.
-    pub fn with_headers(mut self, headers: Headers) -> Self {
+    pub fn with_headers(mut self, headers: HeaderMap) -> Self {
         self.headers = headers;
         self
     }
@@ -166,29 +173,8 @@ impl Response {
         self
     }
 
-    // Sets this response's cors headers from the `Cors` struct.
-    // Example usage:
-    // ```
-    // use worker::*;
-    // fn fetch() -> worker::Result<Response> {
-    //     let cors = Cors::default();
-    //     Response::empty()?
-    //         .with_cors(&cors)
-    // }
-    // ```
-    // pub fn with_cors(self, cors: &Cors) -> Result<Self> {
-    //     let mut headers = self.headers.clone();
-    //     cors.apply_headers(&mut headers)?;
-    //     Ok(self.with_headers(headers))
-    // }
-
     /// Read the `Headers` on this response.
-    pub fn headers(&self) -> &Headers {
+    pub fn headers(&self) -> &HeaderMap {
         &self.headers
     }
-
-    // Get a mutable reference to the `Headers` on this response.
-    // pub fn headers_mut(&mut self) -> &mut Headers {
-    //     &mut self.headers
-    // }
 }

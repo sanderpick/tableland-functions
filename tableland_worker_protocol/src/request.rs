@@ -1,5 +1,5 @@
-use crate::{Headers, Method};
 use fp_bindgen::prelude::Serializable;
+use http::{HeaderMap, Method, Uri};
 use serde::{Deserialize, Serialize};
 use serde_bytes::ByteBuf;
 
@@ -9,17 +9,29 @@ use serde_bytes::ByteBuf;
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize, Serializable)]
 #[fp(rust_module = "tableland_worker_protocol")]
 pub struct Request {
+    #[serde(
+        deserialize_with = "fp_bindgen_support::http::deserialize_http_method",
+        serialize_with = "fp_bindgen_support::http::serialize_http_method"
+    )]
     method: Method,
-    path: String,
-    headers: Headers,
+    #[serde(
+        deserialize_with = "fp_bindgen_support::http::deserialize_uri",
+        serialize_with = "fp_bindgen_support::http::serialize_uri"
+    )]
+    uri: Uri,
+    #[serde(
+        deserialize_with = "fp_bindgen_support::http::deserialize_header_map",
+        serialize_with = "fp_bindgen_support::http::serialize_header_map"
+    )]
+    headers: HeaderMap,
     body: Option<ByteBuf>,
 }
 
 impl Request {
     /// Construct a new `Request` with an HTTP Method.
-    pub fn new(path: String, method: Method, headers: Headers, body: Option<ByteBuf>) -> Self {
+    pub fn new(uri: Uri, method: Method, headers: HeaderMap, body: Option<ByteBuf>) -> Self {
         Request {
-            path: path,
+            uri,
             method,
             headers,
             body,
@@ -27,7 +39,7 @@ impl Request {
     }
 
     /// Get the `Headers` for this request.
-    pub fn headers(&self) -> Headers {
+    pub fn headers(&self) -> HeaderMap {
         self.headers.clone()
     }
 
@@ -36,9 +48,9 @@ impl Request {
         self.method.clone()
     }
 
-    /// The URL Path of this `Request`.
-    pub fn path(&self) -> String {
-        self.path.clone()
+    /// The URI of this `Request`.
+    pub fn uri(&self) -> Uri {
+        self.uri.clone()
     }
 
     pub fn body(&self) -> Option<ByteBuf> {

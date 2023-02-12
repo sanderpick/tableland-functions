@@ -1,15 +1,7 @@
 use bindings::*;
 use maud::{html, DOCTYPE};
 use serde::{Deserialize, Serialize};
-use std::panic;
-
-fn init_panic_hook() {
-    use std::sync::Once;
-    static SET_HOOK: Once = Once::new();
-    SET_HOOK.call_once(|| {
-        panic::set_hook(Box::new(|info| log(info.to_string())));
-    });
-}
+mod utils;
 
 #[derive(Serialize, Deserialize)]
 struct Pet {
@@ -21,10 +13,10 @@ struct Pet {
 const QUERY: &str = "select * from pets_31337_5;";
 
 #[fp_export_impl(bindings)]
-async fn fetch(request: Request) -> Result<Response, Error> {
-    log(format!("{:?}", request));
+async fn fetch(req: Request) -> Result<Response, Error> {
+    log(format!("ssr: {:?}", req));
 
-    let data = query(QUERY.to_string()).await?;
+    let data = query(QUERY.to_string(), ReadOptions::default()).await?;
     let pets: Vec<Pet> = serde_json::from_value(data)?;
     let markup = html! {
         (DOCTYPE)
@@ -51,5 +43,5 @@ async fn fetch(request: Request) -> Result<Response, Error> {
 
 #[fp_export_impl(bindings)]
 fn init() {
-    init_panic_hook();
+    utils::init_panic_hook();
 }
