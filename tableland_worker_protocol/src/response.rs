@@ -15,7 +15,7 @@ const CONTENT_TYPE: &str = "content-type";
 
 /// A [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) representation for
 /// working with or returning a response to a `Request`.
-/// Taken from https://github.com/cloudflare/workers-rs/blob/main/worker/src/request.rs.
+/// Inspired by https://github.com/cloudflare/workers-rs/blob/main/worker/src/request.rs.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize, Serializable)]
 #[fp(rust_module = "tableland_worker_protocol")]
 pub struct Response {

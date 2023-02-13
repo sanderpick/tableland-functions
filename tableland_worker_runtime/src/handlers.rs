@@ -8,8 +8,10 @@ use crate::wasi_spec::bindings::Runtime;
 use crate::wasi_spec::types::*;
 use crate::worker::*;
 use bytes::BufMut;
+use bytes::Bytes;
 use futures::TryStreamExt;
 use http::{HeaderMap, Method, Uri};
+use serde_bytes::ByteBuf;
 use sha2::{Digest, Sha256};
 use warp::{
     http::Response as WarpResponse,
@@ -58,12 +60,14 @@ pub async fn stage(worker: Worker, form: FormData) -> Result<impl Reply, Rejecti
     Ok("success")
 }
 
-pub async fn run(
+pub async fn invoke(
     worker: Worker,
+    method: Method,
     full_path: FullPath,
     hash: String,
     query: String,
     headers: HeaderMap,
+    body: Bytes,
 ) -> Result<impl Reply, Rejection> {
     let rt: Runtime;
     let name = hash.clone();
@@ -95,9 +99,13 @@ pub async fn run(
         path = "/".to_string();
     }
     let uri = path.parse::<Uri>().unwrap();
-    let req = Request::new(uri, Method::GET, headers, None);
+    let bbody = match body.is_empty() {
+        false => Some(ByteBuf::from(body.to_vec())),
+        true => None,
+    };
+    let req = Request::new(uri, method, headers, bbody);
 
-    println!("fetching {} from worker {}", path, name);
+    println!("fetch {} {} from worker {}", req.method(), path, name);
 
     let mut res = rt
         .fetch(req)

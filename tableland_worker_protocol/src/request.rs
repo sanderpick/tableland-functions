@@ -5,7 +5,7 @@ use serde_bytes::ByteBuf;
 
 /// A [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) representation for
 /// handling incoming and creating outbound HTTP requests.
-/// Taken from https://github.com/cloudflare/workers-rs/blob/main/worker/src/request.rs.
+/// Inspired by https://github.com/cloudflare/workers-rs/blob/main/worker/src/request.rs.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize, Serializable)]
 #[fp(rust_module = "tableland_worker_protocol")]
 pub struct Request {

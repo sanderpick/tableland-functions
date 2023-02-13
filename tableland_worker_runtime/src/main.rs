@@ -17,9 +17,9 @@ async fn main() {
         .and(with_worker(worker.clone()))
         .and(warp::multipart::form().max_length(5_000_000))
         .and_then(stage);
-    let run_route = warp::path("worker")
-        .and(warp::get())
+    let invoke_route = warp::path("worker")
         .and(with_worker(worker.clone()))
+        .and(warp::method())
         .and(warp::path::full())
         .and(warp::path::param())
         .and(
@@ -28,10 +28,11 @@ async fn main() {
                 .unify(),
         )
         .and(warp::header::headers_cloned())
-        .and_then(run);
+        .and(warp::body::bytes())
+        .and_then(invoke);
 
     let router = stage_route
-        .or(run_route)
+        .or(invoke_route)
         .with(warp::cors().allow_any_origin())
         .recover(handle_rejection);
     println!("Server started at localhost:3030");
