@@ -1,8 +1,6 @@
 use bindings::*;
 use serde::{Deserialize, Serialize};
-mod router;
-use router::*;
-mod utils;
+use tableland_worker_utils::*;
 
 const VERSION: &str = "0.1.0";
 
@@ -56,5 +54,5 @@ async fn fetch(req: Request) -> Result<Response, Error> {
 
 #[fp_export_impl(bindings)]
 fn init() {
-    utils::init_panic_hook();
+    init_panic_hook();
 }

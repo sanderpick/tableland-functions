@@ -9,13 +9,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 bindings = {path = "../../tableland_worker_protocol/bindings/rust-plugin"}
-futures = "0.3.21"
-http = "0.2"
-matchit = "0.4.2"
-once_cell = {version = "1"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
-serde_bytes = {version = "0.11"}
+tableland_worker_utils = {path = "../../tableland_worker_utils"}
 
 [profile.release]
 lto = true

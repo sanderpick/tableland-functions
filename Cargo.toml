@@ -9,7 +9,8 @@ members = [
     "tableland_worker_protocol",
     "tableland_worker_protocol/generator",
     "tableland_worker_protocol/bindings/rust-plugin",
-    "tableland_worker_runtime"
+    "tableland_worker_runtime",
+    "tableland_worker_utils",
 ]
 
 [workspace.package]

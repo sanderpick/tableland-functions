@@ -1,5 +1,7 @@
 use bindings::log;
 use std::panic;
+mod router;
+pub use router::*;
 
 pub fn init_panic_hook() {
     use std::sync::Once;

@@ -96,6 +96,9 @@ pub async fn run(
     }
     let uri = path.parse::<Uri>().unwrap();
     let req = Request::new(uri, Method::GET, headers, None);
+
+    println!("fetching {} from worker {}", path, name);
+
     let mut res = rt
         .fetch(req)
         .await
