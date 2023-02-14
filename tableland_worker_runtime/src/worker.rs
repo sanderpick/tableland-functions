@@ -29,32 +29,47 @@ impl Worker {
     }
 
     pub async fn add_runtime(&self, cid: String) -> Result<Runtime, WorkerError> {
-        let module = self.fetch_runtime(cid.clone()).await?.to_vec();
-
-        let rt = Runtime::new(module)?;
-        rt.init()?;
-        match self.runtime_cache.insert(cid, rt.clone(), 1).await {
-            true => Ok(rt),
-            false => Err(WorkerError::Cache("failed to cache runtime".to_string())),
-        }
-    }
-
-    pub async fn get_runtime(&self, cid: String) -> Result<Runtime, WorkerError> {
-        match self.runtime_cache.get(cid.as_str()) {
-            Some(v) => Ok(v.value().clone()),
-            None => self.add_runtime(cid).await,
-        }
-    }
-
-    async fn fetch_runtime(&self, cid: String) -> Result<Bytes, WorkerError> {
-        self.http_client
+        let module = self
+            .http_client
             .get(format!("{}/{}", IPFS_GATEWATE, cid))
             .send()
             .await?
             .error_for_status()?
             .bytes()
             .await
-            .map_err(|e| WorkerError::Ipfs(e.to_string()))
+            .map_err(|e| WorkerError::Ipfs(e.to_string()))?
+            .to_vec();
+
+        let file_name = format!("./tableland_worker_runtime/workers/{}.wasm", cid);
+        tokio::fs::write(&file_name, &module).await?;
+
+        self.new_runtime(cid, module).await
+    }
+
+    pub async fn get_runtime(&self, cid: String) -> Result<Runtime, WorkerError> {
+        match self.runtime_cache.get(cid.as_str()) {
+            Some(v) => Ok(v.value().clone()),
+            None => self.load_runtime(cid).await,
+        }
+    }
+
+    async fn load_runtime(&self, cid: String) -> Result<Runtime, WorkerError> {
+        let file_name = format!("./tableland_worker_runtime/workers/{}.wasm", cid);
+        let module = tokio::fs::read(&file_name)
+            .await
+            .map_err(|e| WorkerError::Ipfs(e.to_string()))?;
+
+        self.new_runtime(cid, module).await
+    }
+
+    async fn new_runtime(&self, cid: String, module: Vec<u8>) -> Result<Runtime, WorkerError> {
+        let rt = Runtime::new(module)?;
+        rt.init()?;
+
+        match self.runtime_cache.insert(cid, rt.clone(), 1).await {
+            true => Ok(rt),
+            false => Err(WorkerError::Cache("failed to cache runtime".to_string())),
+        }
     }
 }
 
@@ -75,6 +90,12 @@ impl From<RuntimeError> for WorkerError {
 impl From<InvocationError> for WorkerError {
     fn from(value: InvocationError) -> Self {
         WorkerError::Invocation(value)
+    }
+}
+
+impl From<std::io::Error> for WorkerError {
+    fn from(value: std::io::Error) -> Self {
+        WorkerError::Ipfs(value.to_string())
     }
 }
 
