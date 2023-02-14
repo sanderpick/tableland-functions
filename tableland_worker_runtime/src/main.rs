@@ -12,12 +12,12 @@ use warp::{http::StatusCode, Filter, Rejection, Reply};
 async fn main() {
     let worker = Worker::new();
 
-    let stage_route = warp::path("stage")
+    let add_runtime_route = warp::path("add")
         .and(warp::post())
         .and(with_worker(worker.clone()))
-        .and(warp::multipart::form().max_length(5_000_000))
-        .and_then(stage);
-    let invoke_route = warp::path("worker")
+        .and(warp::path::param())
+        .and_then(add_runtime);
+    let invoke_runtime_route = warp::path("workers")
         .and(with_worker(worker.clone()))
         .and(warp::method())
         .and(warp::path::full())
@@ -29,10 +29,10 @@ async fn main() {
         )
         .and(warp::header::headers_cloned())
         .and(warp::body::bytes())
-        .and_then(invoke);
+        .and_then(invoke_runtime);
 
-    let router = stage_route
-        .or(invoke_route)
+    let router = add_runtime_route
+        .or(invoke_runtime_route)
         .with(warp::cors().allow_any_origin())
         .recover(handle_rejection);
     println!("Server started at localhost:3030");

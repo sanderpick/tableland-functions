@@ -1,96 +1,40 @@
 #[cfg(not(feature = "wasi"))]
-use crate::spec::bindings::Runtime;
-#[cfg(not(feature = "wasi"))]
 use crate::spec::types::*;
-#[cfg(feature = "wasi")]
-use crate::wasi_spec::bindings::Runtime;
 #[cfg(feature = "wasi")]
 use crate::wasi_spec::types::*;
 use crate::worker::*;
-use bytes::BufMut;
 use bytes::Bytes;
-use futures::TryStreamExt;
 use http::{HeaderMap, Method, Uri};
 use serde_bytes::ByteBuf;
-use sha2::{Digest, Sha256};
-use warp::{
-    http::Response as WarpResponse,
-    multipart::{FormData, Part},
-    path::FullPath,
-    Rejection, Reply,
-};
+use warp::{http::Response as WarpResponse, path::FullPath, Rejection, Reply};
 
-pub async fn stage(worker: Worker, form: FormData) -> Result<impl Reply, Rejection> {
-    let parts: Vec<Part> = form.try_collect().await.map_err(|e| {
-        eprintln!("form error: {}", e);
+pub async fn add_runtime(worker: Worker, cid: String) -> Result<impl Reply, Rejection> {
+    worker.add_runtime(cid.clone()).await.map_err(|e| {
+        eprint!("error caching wasm runtime: {}", e);
         warp::reject::reject()
     })?;
-
-    for p in parts {
-        if p.name() == "file" {
-            let value = p
-                .stream()
-                .try_fold(Vec::new(), |mut vec, data| {
-                    vec.put(data);
-                    async move { Ok(vec) }
-                })
-                .await
-                .map_err(|e| {
-                    eprintln!("reading file error: {}", e);
-                    warp::reject::reject()
-                })?;
-
-            let hash = Sha256::new().chain_update(&value).finalize();
-
-            let name = hex::encode(hash);
-            let file_name = format!("./tableland_worker_runtime/workers/{}.wasm", name);
-            tokio::fs::write(&file_name, &value).await.map_err(|e| {
-                eprint!("error writing file: {}", e);
-                warp::reject::reject()
-            })?;
-
-            worker.set(name.clone(), value).await.map_err(|e| {
-                eprint!("error caching wasm runtime: {}", e);
-                warp::reject::reject()
-            })?;
-            println!("cached new wasm runtime: {:?}", name);
-        }
-    }
+    println!("added new wasm runtime: {}", cid);
 
     Ok("success")
 }
 
-pub async fn invoke(
+pub async fn invoke_runtime(
     worker: Worker,
     method: Method,
     full_path: FullPath,
-    hash: String,
+    cid: String,
     query: String,
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<impl Reply, Rejection> {
-    let rt: Runtime;
-    let name = hash.clone();
-    match worker.get(hash.clone()) {
-        Some(r) => {
-            rt = r;
-        }
-        None => {
-            let file_name = format!("./tableland_worker_runtime/workers/{}.wasm", hash);
-            let module = tokio::fs::read(&file_name).await.map_err(|e| {
-                eprint!("error reading worker file: {}", e);
-                warp::reject::reject()
-            })?;
-            rt = worker.set(hash, module).await.map_err(|e| {
-                eprint!("error caching wasm runtime: {}", e);
-                warp::reject::reject()
-            })?;
-        }
-    }
+    let rt = worker.get_runtime(cid.clone()).await.map_err(|e| {
+        eprint!("error getting runtime {}: {}", cid, e);
+        warp::reject::reject()
+    })?;
 
     let mut path = full_path
         .as_str()
-        .trim_start_matches(format!("/worker/{}", name).as_str())
+        .trim_start_matches(format!("/workers/{}", cid).as_str())
         .to_string();
     if query.len() > 0 {
         path = format!("{}?{}", path, query);
@@ -105,7 +49,7 @@ pub async fn invoke(
     };
     let req = Request::new(uri, method, headers, bbody);
 
-    println!("fetch {} {} from worker {}", req.method(), path, name);
+    println!("fetch {} {} on worker {}", req.method(), path, cid);
 
     let mut res = rt
         .fetch(req)

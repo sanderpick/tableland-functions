@@ -30,16 +30,14 @@ impl TablelandClient {
         if opts.unwrap {
             params.push(("unwrap", "true"));
         }
-        let resp = self
-            .http_client
+        self.http_client
             .get(format!("{}{}", self.chain.endpoint.to_string(), QUERY_PATH))
             .query(&params)
             .send()
             .await?
             .error_for_status()?
             .json()
-            .await?;
-        Ok(resp)
+            .await
     }
 }
 
