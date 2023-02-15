@@ -3,14 +3,17 @@ mod handlers;
 mod test;
 mod wasi_spec;
 mod worker;
-pub use crate::handlers::*;
+use crate::handlers::*;
 use crate::worker::*;
-use std::convert::Infallible;
+use std::{convert::Infallible, net::SocketAddr};
 use warp::{http::StatusCode, Filter, Rejection, Reply};
+mod config;
+use crate::config::*;
 
 #[tokio::main]
 async fn main() {
-    let worker = Worker::new();
+    let config: Config = confy::load("tableland_worker", Some("config")).unwrap();
+    let worker = Worker::new(config.clone());
 
     let add_runtime_route = warp::path("add")
         .and(warp::post())
@@ -35,8 +38,11 @@ async fn main() {
         .or(invoke_runtime_route)
         .with(warp::cors().allow_any_origin())
         .recover(handle_rejection);
-    println!("Server started at localhost:3030");
-    warp::serve(router).run(([127, 0, 0, 1], 3030)).await;
+
+    let addr = format!("{}:{}", config.server.host, config.server.port);
+    let saddr: SocketAddr = addr.parse().expect("Unable to parse server address");
+    println!("Server started at {}", addr);
+    warp::serve(router).run(saddr).await;
 }
 
 fn with_worker(worker: Worker) -> impl Filter<Extract = (Worker,), Error = Infallible> + Clone {

@@ -1,25 +1,25 @@
+use crate::config::Config;
 #[cfg(not(feature = "wasi"))]
 use crate::spec::bindings::Runtime;
 #[cfg(feature = "wasi")]
 use crate::wasi_spec::bindings::Runtime;
-use bytes::Bytes;
 use fp_bindgen_support::host::errors::{InvocationError, RuntimeError};
 use reqwest::Client;
 use std::fmt::{Debug, Display, Formatter};
 use std::time::Duration;
 use stretto::AsyncCache;
 
-const IPFS_GATEWATE: &str = "http://localhost:8081/ipfs";
-
 #[derive(Clone)]
 pub struct Worker {
+    config: Config,
     http_client: Client,
     runtime_cache: AsyncCache<String, Runtime>,
 }
 
 impl Worker {
-    pub fn new() -> Self {
+    pub fn new(config: Config) -> Self {
         Worker {
+            config,
             http_client: Client::builder()
                 .timeout(Duration::new(5, 0))
                 .build()
@@ -31,7 +31,7 @@ impl Worker {
     pub async fn add_runtime(&self, cid: String) -> Result<Runtime, WorkerError> {
         let module = self
             .http_client
-            .get(format!("{}/{}", IPFS_GATEWATE, cid))
+            .get(format!("{}/{}", self.config.ipfs.gateway, cid))
             .send()
             .await?
             .error_for_status()?
@@ -40,7 +40,7 @@ impl Worker {
             .map_err(|e| WorkerError::Ipfs(e.to_string()))?
             .to_vec();
 
-        let file_name = format!("./tableland_worker_runtime/workers/{}.wasm", cid);
+        let file_name = format!("{}/{}.wasm", self.config.cache.directory, cid);
         tokio::fs::write(&file_name, &module).await?;
 
         self.new_runtime(cid, module).await
@@ -54,7 +54,7 @@ impl Worker {
     }
 
     async fn load_runtime(&self, cid: String) -> Result<Runtime, WorkerError> {
-        let file_name = format!("./tableland_worker_runtime/workers/{}.wasm", cid);
+        let file_name = format!("{}/{}.wasm", self.config.cache.directory, cid);
         let module = tokio::fs::read(&file_name)
             .await
             .map_err(|e| WorkerError::Ipfs(e.to_string()))?;
