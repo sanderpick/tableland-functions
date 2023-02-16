@@ -1,8 +1,5 @@
 use crate::config::Config;
-#[cfg(not(feature = "wasi"))]
 use crate::spec::bindings::Runtime;
-#[cfg(feature = "wasi")]
-use crate::wasi_spec::bindings::Runtime;
 use fp_bindgen_support::host::errors::{InvocationError, RuntimeError};
 use reqwest::Client;
 use std::fmt::{Debug, Display, Formatter};

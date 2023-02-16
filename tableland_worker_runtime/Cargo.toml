@@ -32,7 +32,4 @@ thiserror = "1.0"
 tokio = { version = "1.9.0", features = ["full"] }
 warp = "0.3"
 wasmer = { version = "2.3", features = ["compiler", "cranelift", "singlepass"] }
-wasmer-wasi = "2.3"
-
-[features]
-wasi = []
+wasmer-middlewares = "2.3"

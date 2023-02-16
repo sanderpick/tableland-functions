@@ -12,7 +12,7 @@ struct Pet {
     owner_name: String,
 }
 
-const QUERY: &str = "select * from pets_31337_5;";
+const QUERY: &str = "select * from pets_31337_4;";
 
 #[fp_export_impl(bindings)]
 async fn fetch(req: Request) -> Result<Response, Error> {

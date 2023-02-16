@@ -53,8 +53,7 @@ fn main() {
             version: VERSION,
             dependencies: PLUGIN_DEPENDENCIES.clone(),
         }),
-        // BindingsType::RustWasmerRuntime,
-        BindingsType::RustWasmerWasiRuntime,
+        BindingsType::RustWasmerRuntime,
     ] {
         let output_path = format!("../bindings/{bindings_type}");
 

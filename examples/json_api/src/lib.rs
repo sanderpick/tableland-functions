@@ -34,7 +34,7 @@ async fn fetch(req: Request) -> Result<Response, Error> {
                 let opts = ReadOptions::default().unwrap(true);
                 let data = query(
                     format!(
-                        "select * from politicians_31337_7 where bioguide_id = '{}'",
+                        "select * from politicians_31337_6 where bioguide_id = '{}'",
                         name
                     ),
                     opts,

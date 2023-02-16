@@ -1,7 +1,7 @@
 mod handlers;
+mod spec;
 #[cfg(test)]
 mod test;
-mod wasi_spec;
 mod worker;
 use crate::handlers::*;
 use crate::worker::*;

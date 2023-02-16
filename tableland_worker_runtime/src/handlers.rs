@@ -1,10 +1,7 @@
-#[cfg(not(feature = "wasi"))]
 use crate::spec::types::*;
-#[cfg(feature = "wasi")]
-use crate::wasi_spec::types::*;
 use crate::worker::*;
 use bytes::Bytes;
-use http::{HeaderMap, Method, Uri};
+use http::{HeaderMap, HeaderValue, Method, Uri};
 use serde_bytes::ByteBuf;
 use warp::{http::Response as WarpResponse, path::FullPath, Rejection, Reply};
 
@@ -51,9 +48,8 @@ pub async fn invoke_runtime(
 
     println!("fetch {} {} on worker {}", req.method(), path, cid);
 
-    let mut res = rt
-        .fetch(req)
-        .await
+    let (res, gas_used) = rt.fetch(req).await;
+    let mut res = res
         .map_err(|e| {
             eprint!("error invoking worker: {}", e);
             warp::reject::reject()
@@ -74,5 +70,8 @@ pub async fn invoke_runtime(
         .unwrap();
     let (mut parts, body) = wres.into_parts();
     parts.headers = res.headers().clone();
+    parts
+        .headers
+        .append("x-gas-used", HeaderValue::from(gas_used));
     Ok(WarpResponse::from_parts(parts, body))
 }

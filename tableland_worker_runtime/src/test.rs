@@ -1,28 +1,21 @@
-#[cfg(not(feature = "wasi"))]
 use crate::spec::bindings::Runtime;
-#[cfg(not(feature = "wasi"))]
 use crate::spec::types::*;
-#[cfg(feature = "wasi")]
-use crate::wasi_spec::bindings::Runtime;
-#[cfg(feature = "wasi")]
-use crate::wasi_spec::types::*;
 use anyhow::Result;
 use http::{HeaderMap, Method};
 
-#[cfg(not(feature = "wasi"))]
 const WASM_BYTES: &'static [u8] =
-    include_bytes!("../../example-plugin/target/wasm32-unknown-unknown/debug/example_plugin.wasm");
-#[cfg(feature = "wasi")]
-const WASM_BYTES: &'static [u8] =
-    include_bytes!("../../examples/ssr/target/wasm32-wasi/debug/ssr.wasm");
+    include_bytes!("../../examples/json_api/target/wasm32-unknown-unknown/release/json_api.wasm");
 
 #[tokio::test]
 async fn fetch() -> Result<()> {
-    let uri: http::Uri = "/hello/world?foo=bar".parse().unwrap();
+    let uri: http::Uri = "/worker-version".parse().unwrap();
     let req = Request::new(uri, Method::GET, HeaderMap::new(), None);
 
     let rt = new_runtime()?;
-    let mut res = rt.fetch(req).await??;
+    let (res, gas) = rt.fetch(req).await;
+    let mut res = res??;
+
+    println!("gas used: {}", gas);
 
     assert_eq!(res.status_code(), 200);
 
