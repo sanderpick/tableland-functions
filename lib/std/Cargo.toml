@@ -1,0 +1,28 @@
+[package]
+authors = { workspace = true }
+description = { workspace = true }
+edition = { workspace = true }
+name = "tableland_std"
+homepage = { workspace = true }
+license = { workspace = true }
+readme = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+
+[features]
+default = ["abort"]
+abort = []
+# backtraces provides much better context at runtime errors (in non-wasm code)
+# at the cost of a bit of code size and performance.
+# This feature requires Rust nightly because it depends on the unstable backtrace feature.
+backtraces = []
+
+[dependencies]
+base64 = "0.21.0"
+derivative = "2"
+forward_ref = "1"
+serde = { version = "1.0.103", default-features = false, features = ["derive", "alloc"] }
+serde-json-wasm = { version = "0.5.0" }
+tableland_derive = { path = "../derive" }
+thiserror = "1.0"
+uint = "0.9.3"

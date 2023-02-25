@@ -1,8 +1,8 @@
 pub mod chains;
-use client_types::*;
 use reqwest::{Client, Error};
 use serde_json::Value as JsonValue;
 use std::time::Duration;
+use tableland_client_types::*;
 
 const QUERY_PATH: &str = "/api/v1/query";
 

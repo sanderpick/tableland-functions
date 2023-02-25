@@ -1,8 +1,8 @@
 #![allow(dead_code)]
-use client_types::ReadOptions;
 use fp_bindgen::{prelude::*, types::CargoDependency};
 use once_cell::sync::Lazy;
 use std::collections::{BTreeMap, BTreeSet};
+use tableland_client_types::ReadOptions;
 use tableland_worker_protocol::{Error, Request, Response};
 
 fp_import! {
@@ -32,8 +32,8 @@ static PLUGIN_DEPENDENCIES: Lazy<BTreeMap<&str, CargoDependency>> = Lazy::new(||
             CargoDependency::with_path("../../../tableland_worker_protocol"),
         ),
         (
-            "client_types",
-            CargoDependency::with_path("../../../tableland_client/client_types"),
+            "tableland_client_types",
+            CargoDependency::with_path("../../../lib/client/types"),
         ),
         (
             "fp-bindgen-support",

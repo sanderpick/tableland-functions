@@ -12,7 +12,6 @@ version = { workspace = true }
 [dependencies]
 anyhow = "1.0"
 bytes = "1.0"
-client_types = { path = "../tableland_client/client_types" }
 confy = "0.5"
 fp-bindgen-support = { git = "https://github.com/fiberplane/fp-bindgen", features = [
   "async",
@@ -26,7 +25,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_bytes = "0.11"
 serde_json = "1"
 stretto = { version = "0.7", features = ["async"] }
-tableland_client = { path = "../tableland_client" }
+tableland_client = { path = "../lib/client" }
+tableland_client_types = { path = "../lib/client/types" }
 tableland_worker_protocol = { path = "../tableland_worker_protocol" }
 thiserror = "1.0"
 tokio = { version = "1.9.0", features = ["full"] }

@@ -2,15 +2,18 @@
 authors = { workspace = true }
 description = { workspace = true }
 edition = { workspace = true }
-name = "tableland_client"
+name = "tableland_derive"
 homepage = { workspace = true }
 license = { workspace = true }
 readme = { workspace = true }
 repository = { workspace = true }
 version = { workspace = true }
 
+[lib]
+proc-macro = true
+
+[features]
+default = []
+
 [dependencies]
-reqwest = { version = "0.11", features = ["json"] }
-serde_json = "1"
-tokio = { version = "1", features = ["full"] }
-client_types = { path = "./client_types" }
+syn = { version = "1.0", features = ["full"] }

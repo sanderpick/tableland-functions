@@ -2,10 +2,15 @@
 exclude = [
     "examples/ssr",
     "examples/json_api",
+    "examples/demo",
 ]
 members = [
-    "tableland_client",
-    "tableland_client/client_types",
+    "lib/client",
+    "lib/client/types",
+    "lib/vm",
+    "lib/derive",
+    "lib/std",
+
     "tableland_worker_protocol",
     "tableland_worker_protocol/generator",
     "tableland_worker_protocol/bindings/rust-plugin",

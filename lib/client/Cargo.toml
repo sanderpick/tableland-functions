@@ -2,7 +2,7 @@
 authors = { workspace = true }
 description = { workspace = true }
 edition = { workspace = true }
-name = "client_types"
+name = "tableland_client"
 homepage = { workspace = true }
 license = { workspace = true }
 readme = { workspace = true }
@@ -10,5 +10,7 @@ repository = { workspace = true }
 version = { workspace = true }
 
 [dependencies]
-fp-bindgen = {git = "https://github.com/fiberplane/fp-bindgen", default-features = false}
-serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+tableland_client_types = { path = "./types" }
