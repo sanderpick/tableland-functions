@@ -3,8 +3,6 @@ use std::backtrace::Backtrace;
 use std::fmt::{Debug, Display};
 use thiserror::Error;
 
-// use cosmwasm_crypto::CryptoError;
-
 use super::communication_error::CommunicationError;
 use crate::backend::BackendError;
 
@@ -50,12 +48,6 @@ pub enum VmError {
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,
     },
-    // #[error("Crypto error: {}", source)]
-    // CryptoErr {
-    //     source: CryptoError,
-    //     #[cfg(feature = "backtraces")]
-    //     backtrace: Backtrace,
-    // },
     #[error("Ran out of gas during contract execution")]
     GasDepletion {
         #[cfg(feature = "backtraces")]
@@ -194,14 +186,6 @@ impl VmError {
         }
     }
 
-    // pub(crate) fn crypto_err(original: CryptoError) -> Self {
-    //     VmError::CryptoErr {
-    //         source: original,
-    //         #[cfg(feature = "backtraces")]
-    //         backtrace: Backtrace::capture(),
-    //     }
-    // }
-
     pub(crate) fn gas_depletion() -> Self {
         VmError::GasDepletion {
             #[cfg(feature = "backtraces")]
@@ -209,6 +193,7 @@ impl VmError {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn generic_err(msg: impl Into<String>) -> Self {
         VmError::GenericErr {
             msg: msg.into(),
@@ -225,6 +210,7 @@ impl VmError {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn integrity_err() -> Self {
         VmError::IntegrityErr {
             #[cfg(feature = "backtraces")]
@@ -308,6 +294,7 @@ impl VmError {
         }
     }
 
+    #[allow(dead_code)]
     pub(crate) fn write_access_denied() -> Self {
         VmError::WriteAccessDenied {
             #[cfg(feature = "backtraces")]
@@ -324,12 +311,6 @@ impl From<BackendError> for VmError {
         }
     }
 }
-
-// impl From<CryptoError> for VmError {
-//     fn from(original: CryptoError) -> Self {
-//         VmError::crypto_err(original)
-//     }
-// }
 
 impl From<wasmer::ExportError> for VmError {
     fn from(original: wasmer::ExportError) -> Self {
@@ -392,17 +373,17 @@ mod tests {
 
     // constructors
 
-    // #[test]
-    // fn backend_err_works() {
-    //     let error = VmError::backend_err(BackendError::unknown("something went wrong"));
-    //     match error {
-    //         VmError::BackendErr {
-    //             source: BackendError::Unknown { msg },
-    //             ..
-    //         } => assert_eq!(msg, "something went wrong"),
-    //         e => panic!("Unexpected error: {:?}", e),
-    //     }
-    // }
+    #[test]
+    fn backend_err_works() {
+        let error = VmError::backend_err(BackendError::unknown("something went wrong"));
+        match error {
+            VmError::BackendErr {
+                source: BackendError::Unknown { msg },
+                ..
+            } => assert_eq!(msg, "something went wrong"),
+            e => panic!("Unexpected error: {:?}", e),
+        }
+    }
 
     #[test]
     fn cache_err_works() {
@@ -439,18 +420,6 @@ mod tests {
             e => panic!("Unexpected error: {:?}", e),
         }
     }
-
-    // #[test]
-    // fn cyrpto_err_works() {
-    //     let error = VmError::crypto_err(CryptoError::generic_err("something went wrong"));
-    //     match error {
-    //         VmError::CryptoErr {
-    //             source: CryptoError::GenericErr { msg, .. },
-    //             ..
-    //         } => assert_eq!(msg, "something went wrong"),
-    //         e => panic!("Unexpected error: {:?}", e),
-    //     }
-    // }
 
     #[test]
     fn gas_depletion_works() {

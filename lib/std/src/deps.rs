@@ -1,32 +1,20 @@
-// use std::marker::PhantomData;
-
-// use crate::query::CustomQuery;
-// use crate::results::Empty;
 use crate::traits::Api;
-// use crate::QuerierWrapper;
 
 /// Holds all external dependencies of the contract.
 /// Designed to allow easy dependency injection at runtime.
 /// This cannot be copied or cloned since it would behave differently
 /// for mock storages and a bridge storage in the VM.
 pub struct OwnedDeps<A: Api> {
-    // pub storage: S,
     pub api: A,
-    // pub querier: Q,
-    // pub custom_query_type: PhantomData<C>,
 }
 
 pub struct DepsMut<'a> {
-    // pub storage: &'a mut dyn Storage,
     pub api: &'a dyn Api,
-    // pub querier: QuerierWrapper<'a, C>,
 }
 
 #[derive(Clone)]
 pub struct Deps<'a> {
-    // pub storage: &'a dyn Storage,
     pub api: &'a dyn Api,
-    // pub querier: QuerierWrapper<'a, C>,
 }
 
 // Use custom implementation on order to implement Copy in case `C` is not `Copy`.
@@ -37,44 +25,28 @@ impl<'a> Copy for Deps<'a> {}
 
 impl<A: Api> OwnedDeps<A> {
     pub fn as_ref(&'_ self) -> Deps<'_> {
-        Deps {
-            // storage: &self.storage,
-            api: &self.api,
-            // querier: QuerierWrapper::new(&self.querier),
-        }
+        Deps { api: &self.api }
     }
 
     pub fn as_mut(&'_ mut self) -> DepsMut<'_> {
-        DepsMut {
-            // storage: &mut self.storage,
-            api: &self.api,
-            // querier: QuerierWrapper::new(&self.querier),
-        }
+        DepsMut { api: &self.api }
     }
 }
 
 impl<'a> DepsMut<'a> {
     pub fn as_ref(&'_ self) -> Deps<'_> {
-        Deps {
-            // storage: self.storage,
-            api: self.api,
-            // querier: self.querier,
-        }
+        Deps { api: self.api }
     }
 
     pub fn branch(&'_ mut self) -> DepsMut<'_> {
-        DepsMut {
-            // storage: self.storage,
-            api: self.api,
-            // querier: self.querier,
-        }
+        DepsMut { api: self.api }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::mock::{mock_dependencies, MockApi};
+    use crate::testing::{mock_dependencies, MockApi};
     use serde::{Deserialize, Serialize};
 
     // ensure we can call these many times, eg. as sub-calls
@@ -100,28 +72,20 @@ mod tests {
 
     #[test]
     fn deps_implements_copy() {
-        // impl CustomQuery for u64 {}
         #[derive(Clone, Serialize, Deserialize)]
         struct MyQuery;
-        // impl CustomQuery for MyQuery {}
 
         // With C: Copy
-        let owned = OwnedDeps::<_> {
-            // storage: MockStorage::default(),
+        let owned = OwnedDeps {
             api: MockApi::default(),
-            // querier: MockQuerier::<u64>::new(&[]),
-            // custom_query_type: PhantomData,
         };
         let deps: Deps = owned.as_ref();
         let _copy1 = deps;
         let _copy2 = deps;
 
         // Without C: Copy
-        let owned = OwnedDeps::<_> {
-            // storage: MockStorage::default(),
+        let owned = OwnedDeps {
             api: MockApi::default(),
-            // querier: MockQuerier::<MyQuery>::new(&[]),
-            // custom_query_type: PhantomData,
         };
         let deps: Deps = owned.as_ref();
         let _copy1 = deps;

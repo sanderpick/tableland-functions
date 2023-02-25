@@ -3,7 +3,6 @@
 #![cfg_attr(feature = "backtraces", feature(backtrace))]
 
 mod backend;
-// mod cache;
 mod calls;
 mod capabilities;
 mod checksum;
@@ -11,12 +10,11 @@ mod compatibility;
 mod conversion;
 mod environment;
 mod errors;
-// mod filesystem;
 mod imports;
 mod instance;
 mod limited;
 mod memory;
-// mod modules;
+mod modules;
 mod sections;
 mod serde;
 mod size;
@@ -25,7 +23,6 @@ pub mod testing;
 mod wasm_backend;
 
 pub use crate::backend::{Backend, BackendApi, BackendError, BackendResult, GasInfo};
-// pub use crate::cache::{AnalysisReport, Cache, CacheOptions, Metrics, Stats};
 pub use crate::calls::{call_fetch, call_fetch_raw};
 pub use crate::capabilities::capabilities_from_csv;
 pub use crate::checksum::Checksum;

@@ -1,4 +1,3 @@
-// use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// An empty struct that serves as a placeholder in different places,

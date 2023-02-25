@@ -1,7 +1,6 @@
 use std::fmt;
 use std::ops::Deref;
 
-// use schemars::JsonSchema;
 use base64::{engine::general_purpose, Engine};
 use serde::{de, ser, Deserialize, Deserializer, Serialize};
 
@@ -10,7 +9,8 @@ use crate::errors::{StdError, StdResult};
 /// Binary is a wrapper around Vec<u8> to add base64 de/serialization
 /// with serde. It also adds some helper methods to help encode inline.
 ///
-/// This is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>
+/// This is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>.
+/// See also <https://github.com/CosmWasm/cosmwasm/blob/main/docs/MESSAGE_TYPES.md>.
 #[derive(Clone, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Binary(pub Vec<u8>);
 
@@ -34,27 +34,27 @@ impl Binary {
         self.0.as_slice()
     }
 
-    // Copies content into fixed-sized array.
-    //
-    // # Examples
-    //
-    // Copy to array of explicit length
-    //
-    // ```
-    // # use cosmwasm_std::Binary;
-    // let binary = Binary::from(&[0xfb, 0x1f, 0x37]);
-    // let array: [u8; 3] = binary.to_array().unwrap();
-    // assert_eq!(array, [0xfb, 0x1f, 0x37]);
-    // ```
-    //
-    // Copy to integer
-    //
-    // ```
-    // # use cosmwasm_std::Binary;
-    // let binary = Binary::from(&[0x8b, 0x67, 0x64, 0x84, 0xb5, 0xfb, 0x1f, 0x37]);
-    // let num = u64::from_be_bytes(binary.to_array().unwrap());
-    // assert_eq!(num, 10045108015024774967);
-    // ```
+    /// Copies content into fixed-sized array.
+    ///
+    /// # Examples
+    ///
+    /// Copy to array of explicit length
+    ///
+    /// ```
+    /// # use cosmwasm_std::Binary;
+    /// let binary = Binary::from(&[0xfb, 0x1f, 0x37]);
+    /// let array: [u8; 3] = binary.to_array().unwrap();
+    /// assert_eq!(array, [0xfb, 0x1f, 0x37]);
+    /// ```
+    ///
+    /// Copy to integer
+    ///
+    /// ```
+    /// # use cosmwasm_std::Binary;
+    /// let binary = Binary::from(&[0x8b, 0x67, 0x64, 0x84, 0xb5, 0xfb, 0x1f, 0x37]);
+    /// let num = u64::from_be_bytes(binary.to_array().unwrap());
+    /// assert_eq!(num, 10045108015024774967);
+    /// ```
     pub fn to_array<const LENGTH: usize>(&self) -> StdResult<[u8; LENGTH]> {
         if self.len() != LENGTH {
             return Err(StdError::invalid_data_size(LENGTH, self.len()));
@@ -85,12 +85,6 @@ impl fmt::Debug for Binary {
     }
 }
 
-impl From<&[u8]> for Binary {
-    fn from(binary: &[u8]) -> Self {
-        Self(binary.to_vec())
-    }
-}
-
 /// Just like Vec<u8>, Binary is a smart pointer to [u8].
 /// This implements `*binary` for us and allows us to
 /// do `&*binary`, returning a `&[u8]` from a `&Binary`.
@@ -104,14 +98,27 @@ impl Deref for Binary {
     }
 }
 
-// Reference
+impl AsRef<[u8]> for Binary {
+    fn as_ref(&self) -> &[u8] {
+        self.as_slice()
+    }
+}
+
+// Slice
+impl From<&[u8]> for Binary {
+    fn from(binary: &[u8]) -> Self {
+        Self(binary.to_vec())
+    }
+}
+
+// Array reference
 impl<const LENGTH: usize> From<&[u8; LENGTH]> for Binary {
     fn from(source: &[u8; LENGTH]) -> Self {
         Self(source.to_vec())
     }
 }
 
-// Owned
+// Owned array
 impl<const LENGTH: usize> From<[u8; LENGTH]> for Binary {
     fn from(source: [u8; LENGTH]) -> Self {
         Self(source.into())
@@ -496,6 +503,34 @@ mod tests {
         assert_eq!(binary.len(), 6);
         let binary_slice: &[u8] = &binary;
         assert_eq!(binary_slice, &[7u8, 35, 49, 101, 0, 255]);
+    }
+
+    #[test]
+    fn binary_implements_as_ref() {
+        // Can use as_ref (this we already get via the Deref implementation)
+        let data = Binary(vec![7u8, 35, 49, 101, 0, 255]);
+        assert_eq!(data.as_ref(), &[7u8, 35, 49, 101, 0, 255]);
+
+        let data = Binary(vec![7u8, 35, 49, 101, 0, 255]);
+        let data_ref = &data;
+        assert_eq!(data_ref.as_ref(), &[7u8, 35, 49, 101, 0, 255]);
+
+        // Implements as ref
+
+        // This is a dummy function to mimic the signature of
+        // https://docs.rs/sha2/0.10.6/sha2/trait.Digest.html#tymethod.digest
+        fn hash(data: impl AsRef<[u8]>) -> u64 {
+            let mut hasher = DefaultHasher::new();
+            data.as_ref().hash(&mut hasher);
+            hasher.finish()
+        }
+
+        let data = Binary(vec![7u8, 35, 49, 101, 0, 255]);
+        hash(data);
+
+        let data = Binary(vec![7u8, 35, 49, 101, 0, 255]);
+        let data_ref = &data;
+        hash(data_ref);
     }
 
     #[test]

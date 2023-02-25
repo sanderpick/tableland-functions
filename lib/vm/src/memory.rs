@@ -1,9 +1,6 @@
-use crate::BackendApi;
-
-use wasmer::{FunctionEnvMut, ValueType, WasmPtr};
+use wasmer::{Array, ValueType, WasmPtr};
 
 use crate::conversion::to_u32;
-use crate::environment::Environment;
 use crate::errors::{
     CommunicationError, CommunicationResult, RegionValidationError, RegionValidationResult,
     VmResult,
@@ -27,26 +24,13 @@ struct Region {
     pub length: u32,
 }
 
-unsafe impl ValueType for Region {
-    fn zero_padding_bytes(&self, bytes: &mut [std::mem::MaybeUninit<u8>]) {
-        todo!()
-    }
-}
+unsafe impl ValueType for Region {}
 
 /// Expects a (fixed size) Region struct at ptr, which is read. This links to the
 /// memory region, which is copied in the second step.
 /// Errors if the length of the region exceeds `max_length`.
-pub fn read_region<A: BackendApi>(
-    // memory: &wasmer::Memory,
-    env: &FunctionEnvMut<Environment<A>>,
-    // store: &impl AsStoreRef,
-    ptr: u32,
-    max_length: usize,
-) -> VmResult<Vec<u8>> {
-    // let mut store = env.as_store_mut();
-    // let env = env.data();
-
-    let region = get_region(env, ptr)?;
+pub fn read_region(memory: &wasmer::Memory, ptr: u32, max_length: usize) -> VmResult<Vec<u8>> {
+    let region = get_region(memory, ptr)?;
 
     if region.length > to_u32(max_length)? {
         return Err(
@@ -54,15 +38,7 @@ pub fn read_region<A: BackendApi>(
         );
     }
 
-    let view = env.data().memory().view(&env);
-    let slice = WasmPtr::<u8>::new(region.offset)
-        .slice(&view, region.length)
-        .unwrap();
-    let data = slice.read_to_vec().unwrap();
-    Ok(data)
-
-    /*
-    match WasmPtr::<u8>::new(region.offset).deref(&view). {
+    match WasmPtr::<u8, Array>::new(region.offset).deref(memory, 0, region.length) {
         Some(cells) => {
             // In case you want to do some premature optimization, this shows how to cast a `&'mut [Cell<u8>]` to `&mut [u8]`:
             // https://github.com/wasmerio/wasmer/blob/0.13.1/lib/wasi/src/syscalls/mod.rs#L79-L81
@@ -79,7 +55,6 @@ pub fn read_region<A: BackendApi>(
             memory.size().bytes().0
         )).into()),
     }
-    a*/
 }
 
 /// maybe_read_region is like read_region, but gracefully handles null pointer (0) by returning None
@@ -87,45 +62,27 @@ pub fn read_region<A: BackendApi>(
 #[cfg(feature = "iterator")]
 pub fn maybe_read_region(
     memory: &wasmer::Memory,
-    store: &impl AsStoreRef,
     ptr: u32,
     max_length: usize,
 ) -> VmResult<Option<Vec<u8>>> {
     if ptr == 0 {
         Ok(None)
     } else {
-        read_region(memory, store, ptr, max_length).map(Some)
+        read_region(memory, ptr, max_length).map(Some)
     }
 }
 
 /// A prepared and sufficiently large memory Region is expected at ptr that points to pre-allocated memory.
 ///
 /// Returns number of bytes written on success.
-pub fn write_region<A: BackendApi>(
-    env: &FunctionEnvMut<Environment<A>>,
-    // memory: &wasmer::Memory,
-    // store: &impl AsStoreRef,
-    ptr: u32,
-    data: &[u8],
-) -> VmResult<()> {
-    let mut region = get_region(env, ptr)?;
+pub fn write_region(memory: &wasmer::Memory, ptr: u32, data: &[u8]) -> VmResult<()> {
+    let mut region = get_region(memory, ptr)?;
 
     let region_capacity = region.capacity as usize;
     if data.len() > region_capacity {
         return Err(CommunicationError::region_too_small(region_capacity, data.len()).into());
     }
-
-    let view = env.data().memory().view(&env);
-    let slice = WasmPtr::<u8>::new(region.offset)
-        .slice(&view, region.length)
-        .unwrap();
-    slice.write_slice(data).unwrap();
-    region.length = data.len() as u32;
-    set_region(env, ptr, region)?;
-    Ok(())
-
-    /*
-    match WasmPtr::<u8>::new(region.offset).deref(memory, 0, region.capacity) {
+    match WasmPtr::<u8, Array>::new(region.offset).deref(memory, 0, region.capacity) {
         Some(cells) => {
             // In case you want to do some premature optimization, this shows how to cast a `&'mut [Cell<u8>]` to `&mut [u8]`:
             // https://github.com/wasmerio/wasmer/blob/0.13.1/lib/wasi/src/syscalls/mod.rs#L79-L81
@@ -142,28 +99,18 @@ pub fn write_region<A: BackendApi>(
             memory.size().bytes().0
         )).into()),
     }
-     */
 }
 
 /// Reads in a Region at ptr in wasm memory and returns a copy of it
-fn get_region<A: BackendApi>(
-    // memory: &wasmer::Memory,
-    // store: &impl AsStoreRef,
-    env: &FunctionEnvMut<Environment<A>>,
-    ptr: u32,
-) -> CommunicationResult<Region> {
-    // let mut store = env.as_store_ref();
-    // let mem = env.data().memory();
-
-    let view = env.data().memory().view(&env);
+fn get_region(memory: &wasmer::Memory, ptr: u32) -> CommunicationResult<Region> {
     let wptr = WasmPtr::<Region>::new(ptr);
-
-    match wptr.deref(&view).read() {
-        Ok(region) => {
+    match wptr.deref(memory) {
+        Some(cell) => {
+            let region = cell.get();
             validate_region(&region)?;
             Ok(region)
         }
-        Err(e) => Err(CommunicationError::deref_err(
+        None => Err(CommunicationError::deref_err(
             ptr,
             "Could not dereference this pointer to a Region",
         )),
@@ -191,22 +138,10 @@ fn validate_region(region: &Region) -> RegionValidationResult<()> {
     Ok(())
 }
 
-/// Overrides a Region at `offset` in wasm memory with data
-fn set_region<A: BackendApi>(
-    env: &FunctionEnvMut<Environment<A>>,
-    // memory: &wasmer::Memory,
-    // store: &impl AsStoreRef,
-    offset: u32,
-    data: Region,
-) -> CommunicationResult<()> {
-    let view = env.data().memory().view(&env);
-    let wptr = WasmPtr::<Region>::new(offset);
-    wptr.deref(&view).write(data).map_err(|e| {
-        CommunicationError::deref_err(offset, "Could not dereference this pointer to a Region")
-    })?;
-    Ok(())
+/// Overrides a Region at ptr in wasm memory with data
+fn set_region(memory: &wasmer::Memory, ptr: u32, data: Region) -> CommunicationResult<()> {
+    let wptr = WasmPtr::<Region>::new(ptr);
 
-    /*
     match wptr.deref(memory) {
         Some(cell) => {
             cell.set(data);
@@ -217,7 +152,6 @@ fn set_region<A: BackendApi>(
             "Could not dereference this pointer to a Region",
         )),
     }
-    */
 }
 
 #[cfg(test)]

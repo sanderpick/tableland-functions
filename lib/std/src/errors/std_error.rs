@@ -3,8 +3,6 @@ use std::backtrace::Backtrace;
 use std::fmt;
 use thiserror::Error;
 
-// use crate::errors::{RecoverPubkeyError, VerificationError};
-
 /// Structured error type for init, execute and query.
 ///
 /// This can be serialized and passed over the Wasm/VM boundary, which allows us to use structured
@@ -22,18 +20,6 @@ use thiserror::Error;
 /// - Add creator function in std_error_helpers.rs
 #[derive(Error, Debug)]
 pub enum StdError {
-    // #[error("Verification error: {source}")]
-    // VerificationErr {
-    //     source: VerificationError,
-    //     #[cfg(feature = "backtraces")]
-    //     backtrace: Backtrace,
-    // },
-    // #[error("Recover pubkey error: {source}")]
-    // RecoverPubkeyErr {
-    //     source: RecoverPubkeyError,
-    //     #[cfg(feature = "backtraces")]
-    //     backtrace: Backtrace,
-    // },
     /// Whenever there is no specific error type available
     #[error("Generic error: {msg}")]
     GenericErr {
@@ -51,6 +37,12 @@ pub enum StdError {
     InvalidDataSize {
         expected: u64,
         actual: u64,
+        #[cfg(feature = "backtraces")]
+        backtrace: Backtrace,
+    },
+    #[error("Invalid hex string: {msg}")]
+    InvalidHex {
+        msg: String,
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,
     },
@@ -105,22 +97,6 @@ pub enum StdError {
 }
 
 impl StdError {
-    // pub fn verification_err(source: VerificationError) -> Self {
-    //     StdError::VerificationErr {
-    //         source,
-    //         #[cfg(feature = "backtraces")]
-    //         backtrace: Backtrace::capture(),
-    //     }
-    // }
-    //
-    // pub fn recover_pubkey_err(source: RecoverPubkeyError) -> Self {
-    //     StdError::RecoverPubkeyErr {
-    //         source,
-    //         #[cfg(feature = "backtraces")]
-    //         backtrace: Backtrace::capture(),
-    //     }
-    // }
-
     pub fn generic_err(msg: impl Into<String>) -> Self {
         StdError::GenericErr {
             msg: msg.into(),
@@ -142,6 +118,14 @@ impl StdError {
             // Cast is safe because usize is 32 or 64 bit large in all environments we support
             expected: expected as u64,
             actual: actual as u64,
+            #[cfg(feature = "backtraces")]
+            backtrace: Backtrace::capture(),
+        }
+    }
+
+    pub fn invalid_hex(msg: impl ToString) -> Self {
+        StdError::InvalidHex {
+            msg: msg.to_string(),
             #[cfg(feature = "backtraces")]
             backtrace: Backtrace::capture(),
         }
@@ -201,38 +185,6 @@ impl StdError {
 impl PartialEq<StdError> for StdError {
     fn eq(&self, rhs: &StdError) -> bool {
         match self {
-            // StdError::VerificationErr {
-            //     source,
-            //     #[cfg(feature = "backtraces")]
-            //         backtrace: _,
-            // } => {
-            //     if let StdError::VerificationErr {
-            //         source: rhs_source,
-            //         #[cfg(feature = "backtraces")]
-            //             backtrace: _,
-            //     } = rhs
-            //     {
-            //         source == rhs_source
-            //     } else {
-            //         false
-            //     }
-            // }
-            // StdError::RecoverPubkeyErr {
-            //     source,
-            //     #[cfg(feature = "backtraces")]
-            //         backtrace: _,
-            // } => {
-            //     if let StdError::RecoverPubkeyErr {
-            //         source: rhs_source,
-            //         #[cfg(feature = "backtraces")]
-            //             backtrace: _,
-            //     } = rhs
-            //     {
-            //         source == rhs_source
-            //     } else {
-            //         false
-            //     }
-            // }
             StdError::GenericErr {
                 msg,
                 #[cfg(feature = "backtraces")]
@@ -279,6 +231,22 @@ impl PartialEq<StdError> for StdError {
                 } = rhs
                 {
                     expected == rhs_expected && actual == rhs_actual
+                } else {
+                    false
+                }
+            }
+            StdError::InvalidHex {
+                msg,
+                #[cfg(feature = "backtraces")]
+                    backtrace: _,
+            } => {
+                if let StdError::InvalidHex {
+                    msg: rhs_msg,
+                    #[cfg(feature = "backtraces")]
+                        backtrace: _,
+                } = rhs
+                {
+                    msg == rhs_msg
                 } else {
                     false
                 }
@@ -415,18 +383,6 @@ impl From<std::string::FromUtf8Error> for StdError {
     }
 }
 
-// impl From<VerificationError> for StdError {
-//     fn from(source: VerificationError) -> Self {
-//         Self::verification_err(source)
-//     }
-// }
-//
-// impl From<RecoverPubkeyError> for StdError {
-//     fn from(source: RecoverPubkeyError) -> Self {
-//         Self::recover_pubkey_err(source)
-//     }
-// }
-
 impl From<OverflowError> for StdError {
     fn from(source: OverflowError) -> Self {
         Self::overflow(source)
@@ -513,7 +469,7 @@ impl ConversionOverflowError {
 }
 
 #[derive(Error, Debug, PartialEq, Eq)]
-#[error("Cannot devide {operand} by zero")]
+#[error("Cannot divide {operand} by zero")]
 pub struct DivideByZeroError {
     pub operand: String,
 }
@@ -524,6 +480,18 @@ impl DivideByZeroError {
             operand: operand.to_string(),
         }
     }
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum CheckedMultiplyFractionError {
+    #[error("{0}")]
+    DivideByZero(#[from] DivideByZeroError),
+
+    #[error("{0}")]
+    ConversionOverflow(#[from] ConversionOverflowError),
+
+    #[error("{0}")]
+    Overflow(#[from] OverflowError),
 }
 
 #[derive(Error, Debug, PartialEq, Eq)]
@@ -610,6 +578,29 @@ mod tests {
             } => {
                 assert_eq!(expected, 31);
                 assert_eq!(actual, 14);
+            }
+            _ => panic!("expect different error"),
+        }
+    }
+
+    #[test]
+    fn invalid_hex_works_for_strings() {
+        let error = StdError::invalid_hex("my text");
+        match error {
+            StdError::InvalidHex { msg, .. } => {
+                assert_eq!(msg, "my text");
+            }
+            _ => panic!("expect different error"),
+        }
+    }
+
+    #[test]
+    fn invalid_hex_works_for_errors() {
+        let original = hex::FromHexError::OddLength;
+        let error = StdError::invalid_hex(original);
+        match error {
+            StdError::InvalidHex { msg, .. } => {
+                assert_eq!(msg, "Odd number of digits");
             }
             _ => panic!("expect different error"),
         }

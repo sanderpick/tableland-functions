@@ -1,34 +1,33 @@
-// use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
-// This is the final result type that is created and serialized in a contract for
-// every init/execute/migrate call. The VM then deserializes this type to distinguish
-// between successful and failed executions.
-//
-// We use a custom type here instead of Rust's Result because we want to be able to
-// define the serialization, which is a public interface. Every language that compiles
-// to Wasm and runs in the ComsWasm VM needs to create the same JSON representation.
-//
-// # Examples
-//
-// Success:
-//
-// ```
-// # use cosmwasm_std::{to_vec, ContractResult, Response};
-// let response: Response = Response::default();
-// let result: ContractResult<Response> = ContractResult::Ok(response);
-// assert_eq!(to_vec(&result).unwrap(), br#"{"ok":{"messages":[],"attributes":[],"events":[],"data":null}}"#);
-// ```
-//
-// Failure:
-//
-// ```
-// # use cosmwasm_std::{to_vec, ContractResult, Response};
-// let error_msg = String::from("Something went wrong");
-// let result: ContractResult<Response> = ContractResult::Err(error_msg);
-// assert_eq!(to_vec(&result).unwrap(), br#"{"error":"Something went wrong"}"#);
-// ```
+/// This is the final result type that is created and serialized in a contract for
+/// every init/execute/migrate call. The VM then deserializes this type to distinguish
+/// between successful and failed executions.
+///
+/// We use a custom type here instead of Rust's Result because we want to be able to
+/// define the serialization, which is a public interface. Every language that compiles
+/// to Wasm and runs in the ComsWasm VM needs to create the same JSON representation.
+///
+/// # Examples
+///
+/// Success:
+///
+/// ```
+/// # use cosmwasm_std::{to_vec, ContractResult, Response};
+/// let response: Response = Response::default();
+/// let result: ContractResult<Response> = ContractResult::Ok(response);
+/// assert_eq!(to_vec(&result).unwrap(), br#"{"ok":{"messages":[],"attributes":[],"events":[],"data":null}}"#);
+/// ```
+///
+/// Failure:
+///
+/// ```
+/// # use cosmwasm_std::{to_vec, ContractResult, Response};
+/// let error_msg = String::from("Something went wrong");
+/// let result: ContractResult<Response> = ContractResult::Err(error_msg);
+/// assert_eq!(to_vec(&result).unwrap(), br#"{"error":"Something went wrong"}"#);
+/// ```
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ContractResult<S> {

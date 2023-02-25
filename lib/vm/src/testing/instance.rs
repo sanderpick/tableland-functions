@@ -1,7 +1,6 @@
 //! This file has some helpers for integration tests.
 //! They should be imported via full path to ensure there is no confusion
 //! use cosmwasm_vm::testing::X
-// use cosmwasm_std::Coin;
 use std::collections::HashSet;
 
 use crate::capabilities::capabilities_from_csv;
@@ -11,8 +10,6 @@ use crate::size::Size;
 use crate::{Backend, BackendApi};
 
 use super::mock::MockApi;
-// use super::querier::MockQuerier;
-// use super::storage::MockStorage;
 
 /// This gas limit is used in integration tests and should be high enough to allow a reasonable
 /// number of contract executions and queries on one instance. For this reason it is significatly
@@ -30,8 +27,8 @@ pub fn mock_instance(wasm: &[u8]) -> Instance<MockApi> {
     )
 }
 
-pub fn mock_instance_with_failing_api<'a>(
-    wasm: &'a [u8],
+pub fn mock_instance_with_failing_api(
+    wasm: &[u8],
     backend_error: &'static str,
 ) -> Instance<MockApi> {
     mock_instance_with_options(
@@ -57,10 +54,6 @@ pub fn mock_instance_with_gas_limit(wasm: &[u8], gas_limit: u64) -> Instance<Moc
 
 #[derive(Debug)]
 pub struct MockInstanceOptions {
-    // // dependencies
-    // pub balances: &'a [(&'a str, &'a [Coin])],
-    // /// This option is merged into balances and might override an existing value
-    // pub contract_balance: Option<&'a [Coin]>,
     /// When set, all calls to the API fail with BackendError::Unknown containing this message
     pub backend_error: Option<&'static str>,
 
@@ -77,8 +70,6 @@ impl MockInstanceOptions {
     fn default_capabilities() -> HashSet<String> {
         #[allow(unused_mut)]
         let mut out = capabilities_from_csv("");
-        // #[cfg(feature = "stargate")]
-        // out.insert("stargate".to_string());
         out
     }
 }
@@ -87,8 +78,6 @@ impl Default for MockInstanceOptions {
     fn default() -> Self {
         Self {
             // dependencies
-            // balances: Default::default(),
-            // contract_balance: Default::default(),
             backend_error: None,
 
             // instance
@@ -102,17 +91,6 @@ impl Default for MockInstanceOptions {
 
 pub fn mock_instance_with_options(wasm: &[u8], options: MockInstanceOptions) -> Instance<MockApi> {
     check_wasm(wasm, &options.available_capabilities).unwrap();
-    // let contract_address = MOCK_CONTRACT_ADDR;
-
-    // // merge balances
-    // let mut balances = options.balances.to_vec();
-    // if let Some(contract_balance) = options.contract_balance {
-    //     // Remove old entry if exists
-    //     if let Some(pos) = balances.iter().position(|item| item.0 == contract_address) {
-    //         balances.remove(pos);
-    //     }
-    //     balances.push((contract_address, contract_balance));
-    // }
 
     let api = if let Some(backend_error) = options.backend_error {
         MockApi::new_failing(backend_error)
@@ -120,11 +98,7 @@ pub fn mock_instance_with_options(wasm: &[u8], options: MockInstanceOptions) -> 
         MockApi::default()
     };
 
-    let backend = Backend {
-        api,
-        // storage: MockStorage::default(),
-        // querier: MockQuerier::new(&balances),
-    };
+    let backend = Backend { api };
     let memory_limit = options.memory_limit;
     let options = InstanceOptions {
         gas_limit: options.gas_limit,
@@ -149,8 +123,6 @@ pub fn mock_instance_options() -> (InstanceOptions, Option<Size>) {
 pub fn test_io<A>(instance: &mut Instance<A>)
 where
     A: BackendApi + 'static,
-    // S: Storage + 'static,
-    // Q: Querier + 'static,
 {
     let sizes: Vec<usize> = vec![0, 1, 3, 10, 200, 2000, 5 * 1024];
     let bytes: Vec<u8> = vec![0x00, 0xA5, 0xFF];

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use wasmer::{Module, ModuleMiddleware, Store};
+use wasmer::{Module, ModuleMiddleware};
 
 use crate::errors::VmResult;
 use crate::size::Size;
@@ -15,21 +15,21 @@ pub fn compile(
     code: &[u8],
     memory_limit: Option<Size>,
     middlewares: &[Arc<dyn ModuleMiddleware>],
-) -> VmResult<(Module, Store)> {
+) -> VmResult<Module> {
     let store = make_compile_time_store(memory_limit, middlewares);
     let module = Module::new(&store, code)?;
-    Ok((module, store))
+    Ok(module)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    static WORKER: &[u8] = include_bytes!("../../testdata/floaty.wasm");
+    static CONTRACT: &[u8] = include_bytes!("../../testdata/floaty.wasm");
 
     #[test]
     fn contract_with_floats_fails_check() {
-        let err = compile(WORKER, None, &[]).unwrap_err();
+        let err = compile(CONTRACT, None, &[]).unwrap_err();
         assert!(err.to_string().contains("Float operator detected:"));
     }
 }

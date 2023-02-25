@@ -21,8 +21,12 @@ backtraces = []
 base64 = "0.21.0"
 derivative = "2"
 forward_ref = "1"
+hex = "0.4"
 serde = { version = "1.0.103", default-features = false, features = ["derive", "alloc"] }
 serde-json-wasm = { version = "0.5.0" }
 tableland_derive = { path = "../derive" }
 thiserror = "1.0"
 uint = "0.9.3"
+
+[dev-dependencies]
+hex-literal = "0.3.1"
