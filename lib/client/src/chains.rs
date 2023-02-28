@@ -2,6 +2,7 @@ const MAINNET_URL: &str = "https://tableland.network";
 const TESTNET_URL: &str = "https://testnets.tableland.network";
 const LOCAL_URL: &str = "http://localhost:8080";
 
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub enum ChainID {
     Ethereum = 1,
@@ -15,6 +16,7 @@ pub enum ChainID {
     Local = 31337,
 }
 
+#[derive(Debug, Clone)]
 pub struct Chain {
     pub endpoint: String,
     pub id: i32,
@@ -22,6 +24,7 @@ pub struct Chain {
 }
 
 impl Chain {
+    #[allow(dead_code)]
     fn can_relay_writes(&self) -> bool {
         &self.endpoint != MAINNET_URL
     }

@@ -8,5 +8,5 @@ mod mock;
 mod shuffle;
 
 pub use assertions::assert_approx_eq_impl;
-pub use mock::{digit_sum, mock_dependencies, mock_env, MockApi};
+pub use mock::{mock_dependencies, mock_env, MockApi};
 pub use shuffle::riffle_shuffle;

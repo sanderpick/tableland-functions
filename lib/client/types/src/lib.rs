@@ -1,9 +1,7 @@
-use fp_bindgen::prelude::Serializable;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize, Serializable)]
-#[fp(rust_module = "client_types")]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub enum Format {
     Objects,
     Table,
@@ -15,8 +13,7 @@ impl Display for Format {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize, Serializable)]
-#[fp(rust_module = "client_types")]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ReadOptions {
     pub format: Format,
     pub extract: bool,

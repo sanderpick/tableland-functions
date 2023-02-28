@@ -2,7 +2,7 @@
 authors = { workspace = true }
 description = { workspace = true }
 edition = { workspace = true }
-name = "tableland_worker_utils"
+name = "tableland_router"
 homepage = { workspace = true }
 license = { workspace = true }
 readme = { workspace = true }
@@ -10,7 +10,6 @@ repository = { workspace = true }
 version = { workspace = true }
 
 [dependencies]
-bindings = {path = "../tableland_worker_protocol/bindings/rust-plugin"}
 futures = "0.3.21"
 http = "0.2"
 matchit = "0.4.2"

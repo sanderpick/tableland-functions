@@ -9,7 +9,7 @@ use crate::capabilities::required_capabilities_from_module;
 use crate::conversion::{ref_to_u32, to_u32};
 use crate::environment::Environment;
 use crate::errors::{CommunicationError, VmError, VmResult};
-use crate::imports::{do_abort, do_debug, do_hello};
+use crate::imports::{do_abort, do_debug, do_read};
 use crate::memory::{read_region, write_region};
 use crate::size::Size;
 use crate::wasm_backend::compile;
@@ -83,8 +83,8 @@ where
         let mut env_imports = Exports::new();
 
         env_imports.insert(
-            "hello",
-            Function::new_native_with_env(store, env.clone(), do_hello),
+            "read",
+            Function::new_native_with_env(store, env.clone(), do_read),
         );
 
         // Allows the contract to emit debug logs that the host can either process or ignore.

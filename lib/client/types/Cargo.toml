@@ -10,5 +10,4 @@ repository = { workspace = true }
 version = { workspace = true }
 
 [dependencies]
-fp-bindgen = {git = "https://github.com/fiberplane/fp-bindgen", default-features = false}
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }

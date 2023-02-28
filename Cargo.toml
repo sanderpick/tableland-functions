@@ -1,21 +1,15 @@
 [workspace]
 exclude = [
-    "examples/ssr",
-    "examples/json_api",
     "examples/demo",
 ]
 members = [
     "lib/client",
     "lib/client/types",
-    "lib/vm",
     "lib/derive",
+    "lib/router",
     "lib/std",
-
-    "tableland_worker_protocol",
-    "tableland_worker_protocol/generator",
-    "tableland_worker_protocol/bindings/rust-plugin",
-    "tableland_worker_runtime",
-    "tableland_worker_utils",
+    "lib/vm",
+    "lib/worker",
 ]
 
 [workspace.package]

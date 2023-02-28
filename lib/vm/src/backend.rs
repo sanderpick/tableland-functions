@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::ops::AddAssign;
 use std::string::FromUtf8Error;
+use tableland_std::Binary;
 use thiserror::Error;
 
 /// A structure that represents gas cost to be deducted from the remaining gas.
@@ -77,8 +78,9 @@ pub struct Backend<A: BackendApi> {
 ///
 /// We can use feature flags to opt-in to non-essential methods
 /// for backwards compatibility in systems that don't have them all.
-pub trait BackendApi: Copy + Clone + Send {
-    fn hello(&self, input: &str) -> BackendResult<Vec<u8>>;
+pub trait BackendApi: Clone + Send {
+    /// Performs a Tableland read query.
+    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Binary>;
 }
 
 /// A result type for calling into the backend. Such a call can cause

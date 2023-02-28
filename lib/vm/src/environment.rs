@@ -88,7 +88,7 @@ unsafe impl<A: BackendApi> Sync for Environment<A> {}
 impl<A: BackendApi> Clone for Environment<A> {
     fn clone(&self) -> Self {
         Environment {
-            api: self.api,
+            api: self.api.clone(),
             print_debug: self.print_debug,
             gas_config: self.gas_config.clone(),
             data: self.data.clone(),

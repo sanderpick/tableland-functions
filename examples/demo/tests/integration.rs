@@ -12,9 +12,11 @@ fn create_function() -> Instance<MockApi> {
 }
 
 #[test]
-fn basic_fetch() {
-    let mut deps = create_function();
-    let res: Response = fetch(&mut deps, mock_env()).unwrap();
+fn call_fetch_works() {
+    let mut instance = create_function();
+    let res: Response = fetch(&mut instance, mock_env()).unwrap();
     assert_eq!(true, res.data.is_some());
-    println!("{:?}", res.data.unwrap().0);
+
+    let report = instance.create_gas_report();
+    println!("{:?}", report);
 }

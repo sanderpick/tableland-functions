@@ -26,6 +26,7 @@ pub use crate::backend::{Backend, BackendApi, BackendError, BackendResult, GasIn
 pub use crate::calls::{call_fetch, call_fetch_raw};
 pub use crate::capabilities::capabilities_from_csv;
 pub use crate::checksum::Checksum;
+pub use crate::compatibility::check_wasm;
 pub use crate::errors::{
     CommunicationError, CommunicationResult, RegionValidationError, RegionValidationResult,
     VmError, VmResult,

@@ -1,11 +1,8 @@
 use tableland_std::{entry_point, DepsMut, Env, Response, StdResult};
 
 #[entry_point]
-pub fn fetch(_deps: DepsMut, _env: Env) -> StdResult<Response> {
-    _deps
-        .api
-        .debug(format!("block info: {:?}", _env.block).as_str());
-    let res = _deps.api.hello("foo")?;
+pub fn fetch(deps: DepsMut, _env: Env) -> StdResult<Response> {
+    let res = deps.api.read("select * from pets_31337_4")?;
     Ok(Response::new().set_data(res))
 }
 
@@ -24,7 +21,7 @@ mod tests {
     }
 
     #[test]
-    fn basic_fetch() {
+    fn call_fetch_works() {
         create_function();
     }
 }

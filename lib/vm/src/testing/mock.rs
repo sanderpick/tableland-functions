@@ -1,8 +1,14 @@
-use tableland_std::{BlockInfo, Env};
+use tableland_std::{to_binary, Binary, BlockInfo, Env};
 
-use crate::{Backend, BackendApi, BackendResult, GasInfo};
+use crate::{Backend, BackendApi, BackendError, BackendResult, GasInfo};
 
-const GAS_COST_HELLO: u64 = 55;
+const RESPONSE: &[u8] = include_bytes!("../../testdata/response.json");
+
+const GAS_COST_QUERY_FLAT: u64 = 100_000;
+/// Gas per request byte
+const GAS_COST_QUERY_REQUEST_MULTIPLIER: u64 = 0;
+/// Gas per reponse byte
+const GAS_COST_QUERY_RESPONSE_MULTIPLIER: u64 = 100;
 
 /// All external requirements that can be injected for unit tests.
 /// It sets the given balance for the contract itself, nothing else
@@ -40,10 +46,26 @@ impl Default for MockApi {
 }
 
 impl BackendApi for MockApi {
-    fn hello(&self, input: &str) -> BackendResult<Vec<u8>> {
-        let gas_info = GasInfo::with_cost(GAS_COST_HELLO);
-        let out = Vec::from(input.to_string().as_bytes());
-        (Ok(out), gas_info)
+    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Binary> {
+        let mut gas_info = GasInfo::with_externally_used(
+            GAS_COST_QUERY_FLAT + (GAS_COST_QUERY_REQUEST_MULTIPLIER * (statement.len() as u64)),
+        );
+        if gas_info.externally_used > gas_limit {
+            return (Err(BackendError::out_of_gas()), gas_info);
+        }
+
+        let response = match to_binary(RESPONSE) {
+            Ok(b) => b,
+            Err(e) => return (Err(BackendError::UserErr { msg: e.to_string() }), gas_info),
+        };
+
+        gas_info.externally_used +=
+            GAS_COST_QUERY_RESPONSE_MULTIPLIER * (to_binary(&response).unwrap().len() as u64);
+        if gas_info.externally_used > gas_limit {
+            return (Err(BackendError::out_of_gas()), gas_info);
+        }
+
+        (Ok(response), gas_info)
     }
 }
 
@@ -66,20 +88,14 @@ mod tests {
     use super::*;
     use crate::BackendError;
 
-    #[test]
-    fn hello_works() {
-        let api = MockApi::default();
-
-        api.hello("foobar123").0.unwrap();
-    }
+    const DEFAULT_QUERY_GAS_LIMIT: u64 = 300_000;
 
     #[test]
-    fn hello_max_input_length() {
+    fn read_works() {
         let api = MockApi::default();
-        let human = "longer-than-the-address-length-supported-by-this-api-longer-than-54";
-        match api.hello(human).0.unwrap_err() {
-            BackendError::UserErr { msg } => assert!(msg.contains("too long")),
-            err => panic!("Unexpected error: {:?}", err),
-        }
+
+        api.read("select * from my_table", DEFAULT_QUERY_GAS_LIMIT)
+            .0
+            .unwrap();
     }
 }

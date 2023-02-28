@@ -9,7 +9,7 @@ use crate::static_analysis::{deserialize_wasm, ExportInfo};
 
 /// Lists all imports we provide upon instantiating the instance in Instance::from_module()
 /// This should be updated when new imports are added
-const SUPPORTED_IMPORTS: &[&str] = &["env.abort", "env.debug", "env.hello"];
+const SUPPORTED_IMPORTS: &[&str] = &["env.abort", "env.debug", "env.read"];
 
 /// Lists all entry points we expect to be present when calling a contract.
 /// Other optional exports exist, e.g. "execute", "migrate" and "query".

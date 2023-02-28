@@ -2,11 +2,11 @@ use crate::deps::OwnedDeps;
 use crate::errors::StdResult;
 use crate::traits::Api;
 use crate::types::{BlockInfo, Env};
+use crate::{to_binary, Binary};
+
+const RESPONSE: &[u8] = include_bytes!("../../testdata/response.json");
 
 /// Creates all external requirements that can be injected for unit tests.
-///
-/// See also [`mock_dependencies_with_balance`] and [`mock_dependencies_with_balances`]
-/// if you want to start with some initial balances.
 pub fn mock_dependencies() -> OwnedDeps<MockApi> {
     OwnedDeps {
         api: MockApi::default(),
@@ -26,8 +26,8 @@ impl Default for MockApi {
 }
 
 impl Api for MockApi {
-    fn hello(&self, input: &str) -> StdResult<Vec<u8>> {
-        Ok(Vec::from(input.to_string().as_bytes()))
+    fn read(&self, _statement: &str) -> StdResult<Binary> {
+        to_binary(RESPONSE)
     }
 
     fn debug(&self, message: &str) {
@@ -49,44 +49,13 @@ pub fn mock_env() -> Env {
     }
 }
 
-pub fn digit_sum(input: &[u8]) -> usize {
-    input.iter().fold(0, |sum, val| sum + (*val as usize))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn hello_works() {
+    fn read_works() {
         let api = MockApi::default();
-        api.hello("foobar123").unwrap();
-    }
-
-    #[test]
-    fn addr_canonicalize_max_input_length() {
-        let api = MockApi::default();
-        let human =
-            String::from("some-extremely-long-address-not-supported-by-this-api-longer-than-supported------------------------");
-        let err = api.hello(&human).unwrap_err();
-        assert!(err
-            .to_string()
-            .contains("human address too long for this mock implementation (must be <= 90)"));
-    }
-
-    #[test]
-    fn digit_sum_works() {
-        assert_eq!(digit_sum(&[]), 0);
-        assert_eq!(digit_sum(&[0]), 0);
-        assert_eq!(digit_sum(&[0, 0]), 0);
-        assert_eq!(digit_sum(&[0, 0, 0]), 0);
-
-        assert_eq!(digit_sum(&[1, 0, 0]), 1);
-        assert_eq!(digit_sum(&[0, 1, 0]), 1);
-        assert_eq!(digit_sum(&[0, 0, 1]), 1);
-
-        assert_eq!(digit_sum(&[1, 2, 3]), 6);
-
-        assert_eq!(digit_sum(&[255, 1]), 256);
+        api.read("foobar123").unwrap();
     }
 }

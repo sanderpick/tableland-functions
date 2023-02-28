@@ -1,18 +1,20 @@
 //! Import implementations
-use crate::backend::{BackendApi, BackendError};
+use crate::backend::BackendApi;
 use crate::conversion::{ref_to_u32, to_u32};
 use crate::environment::{process_gas_info, Environment};
 use crate::errors::{CommunicationError, VmError, VmResult};
 use crate::memory::{read_region, write_region};
 #[allow(unused_imports)]
 use crate::sections::encode_sections;
+use crate::serde::to_vec;
 
 /// A kibi (kilo binary)
 const KI: usize = 1024;
 /// A mibi (mega binary)
 const MI: usize = 1024 * 1024;
 
-const MAX_LENGTH_QUERY_REQUEST: usize = 64 * KI;
+/// Max length for a Tableland read query statement.
+const MAX_LENGTH_QUERY_REQUEST: usize = KI;
 
 /// Max length for a debug message
 const MAX_LENGTH_DEBUG: usize = 2 * MI;
@@ -27,31 +29,22 @@ const MAX_LENGTH_ABORT: usize = 2 * MI;
 // argument and cannot capture other variables. Thus everything is accessed
 // through the env.
 
-pub fn do_hello<A: BackendApi>(
-    env: &Environment<A>,
-    source_ptr: u32,
-    destination_ptr: u32,
-) -> VmResult<u32> {
-    let source_data = read_region(&env.memory(), source_ptr, MAX_LENGTH_QUERY_REQUEST)?;
-    if source_data.is_empty() {
+pub fn do_read<A: BackendApi>(env: &Environment<A>, request_ptr: u32) -> VmResult<u32> {
+    let request = read_region(&env.memory(), request_ptr, MAX_LENGTH_QUERY_REQUEST)?;
+    if request.is_empty() {
         return write_to_contract::<A>(env, b"Input is empty");
     }
 
-    let source_string = match String::from_utf8(source_data) {
+    let request_string = match String::from_utf8(request) {
         Ok(s) => s,
         Err(_) => return write_to_contract::<A>(env, b"Input is not valid UTF-8"),
     };
 
-    let (result, gas_info) = env.api.hello(&source_string);
+    let gas_remaining = env.get_gas_left();
+    let (result, gas_info) = env.api.read(&request_string, gas_remaining);
     process_gas_info::<A>(env, gas_info)?;
-    match result {
-        Ok(data) => {
-            write_region(&env.memory(), destination_ptr, data.as_slice())?;
-            Ok(0)
-        }
-        Err(BackendError::UserErr { msg, .. }) => Ok(write_to_contract::<A>(env, msg.as_bytes())?),
-        Err(err) => Err(VmError::from(err)),
-    }
+    let serialized = to_vec(&result?)?;
+    write_to_contract::<A>(env, &serialized)
 }
 
 /// Prints a debug message to console.
