@@ -10,9 +10,9 @@ use crate::BackendApi;
 /// Mimicks the call signature of the smart contracts.
 /// Thus it moves env and msg rather than take them as reference.
 /// This is inefficient here, but only used in test code.
-pub fn fetch<A>(instance: &mut Instance<A>, request: Request) -> FuncResult<Response>
+pub fn fetch<A>(instance: &mut Instance<A>, req: Request) -> FuncResult<Response>
 where
     A: BackendApi + 'static,
 {
-    call_fetch(instance, &request).expect("VM error")
+    call_fetch(instance, &req).expect("VM error")
 }

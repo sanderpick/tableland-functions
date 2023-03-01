@@ -543,8 +543,6 @@ mod tests {
         assert_eq!(report1.limit, LIMIT);
         assert_eq!(report1.remaining, LIMIT);
 
-        // init contract
-        let msg = br#"{"verifier": "verifies", "beneficiary": "benefits"}"#;
         call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
 
         let report2 = instance.create_gas_report();
@@ -562,7 +560,6 @@ mod tests {
         let mut instance = mock_instance(CONTRACT);
         let orig_gas = instance.get_gas_left();
 
-        // init contract
         call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
 
         let init_used = orig_gas - instance.get_gas_left();
@@ -573,7 +570,6 @@ mod tests {
     fn contract_deducts_gas_execute() {
         let mut instance = mock_instance(CONTRACT);
 
-        // init contract
         call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
 
         // // run contract - just sanity check - results validate in contract unit tests
@@ -590,7 +586,6 @@ mod tests {
     fn contract_enforces_gas_limit() {
         let mut instance = mock_instance_with_gas_limit(CONTRACT, 20_000);
 
-        // init contract
         let res = call_fetch(&mut instance, &mock_request());
         assert!(res.is_err());
     }

@@ -57,33 +57,33 @@ macro_rules! r#try_into_func_result {
 /// This should be wrapped in an external "C" export, containing a contract-specific function as an argument.
 ///
 /// - `E`: error type for responses
-pub fn do_fetch<E>(fetch_fn: &dyn Fn(CtxMut, Request) -> Result<Response, E>, env_ptr: u32) -> u32
+pub fn do_fetch<E>(fetch_fn: &dyn Fn(Request, CtxMut) -> Result<Response, E>, req_ptr: u32) -> u32
 where
     E: ToString,
 {
     #[cfg(feature = "abort")]
     install_panic_handler();
-    let res = _do_fetch::<E>(fetch_fn, env_ptr as *mut Region);
+    let res = _do_fetch::<E>(fetch_fn, req_ptr as *mut Region);
     let v = serde_json::to_vec(&res).unwrap();
     release_buffer(v) as u32
 }
 
 fn _do_fetch<E>(
-    fetch_fn: &dyn Fn(CtxMut, Request) -> Result<Response, E>,
-    env_ptr: *mut Region,
+    fetch_fn: &dyn Fn(Request, CtxMut) -> Result<Response, E>,
+    req_ptr: *mut Region,
 ) -> FuncResult<Response>
 where
     E: ToString,
 {
-    let env: Vec<u8> = unsafe { consume_region(env_ptr) };
-    let env: Request = try_into_func_result!(serde_json::from_slice(&env));
+    let req: Vec<u8> = unsafe { consume_region(req_ptr) };
+    let req: Request = try_into_func_result!(serde_json::from_slice(&req));
 
-    let mut deps = make_dependencies();
-    fetch_fn(deps.as_mut(), env).into()
+    let mut ctx = make_ctx();
+    fetch_fn(req, ctx.as_mut()).into()
 }
 
 /// Makes all bridges to external dependencies (i.e. Wasm imports) that are injected by the VM
-pub(crate) fn make_dependencies() -> OwnedCtx<ExternalApi> {
+pub(crate) fn make_ctx() -> OwnedCtx<ExternalApi> {
     OwnedCtx {
         tableland: ExternalApi::new(),
     }

@@ -3,7 +3,7 @@ use serde_json::to_vec;
 use tableland_std::{entry_point, CtxMut, Request, Response, StdResult};
 
 #[entry_point]
-pub fn fetch(ctx: CtxMut, _req: Request) -> StdResult<Response> {
+pub fn fetch(_req: Request, ctx: CtxMut) -> StdResult<Response> {
     let res = ctx.tableland.read("select * from pets_31337_4")?;
     let json = to_vec(&res).unwrap();
 
@@ -23,8 +23,8 @@ mod tests {
 
     #[test]
     fn call_fetch_works() {
-        let mut deps = create_function();
-        let res = fetch(deps.as_mut(), mock_request()).unwrap();
+        let mut ctx = create_function();
+        let res = fetch(mock_request(), ctx.as_mut()).unwrap();
         assert_eq!(true, res.data.is_some());
 
         let data = res.data.unwrap().into_vec();

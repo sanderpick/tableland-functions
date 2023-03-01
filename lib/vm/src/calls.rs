@@ -30,23 +30,20 @@ mod deserialization_limits {
     pub const RESULT_QUERY: usize = 256 * KI;
 }
 
-pub fn call_fetch<A>(
-    instance: &mut Instance<A>,
-    request: &Request,
-) -> VmResult<FuncResult<Response>>
+pub fn call_fetch<A>(instance: &mut Instance<A>, req: &Request) -> VmResult<FuncResult<Response>>
 where
     A: BackendApi + 'static,
 {
-    let request = to_vec(request)?;
-    let data = call_fetch_raw(instance, &request)?;
+    let req = to_vec(req)?;
+    let data = call_fetch_raw(instance, &req)?;
     from_slice::<FuncResult<Response>>(&data, deserialization_limits::RESULT_QUERY)
 }
 
-pub fn call_fetch_raw<A>(instance: &mut Instance<A>, request: &[u8]) -> VmResult<Vec<u8>>
+pub fn call_fetch_raw<A>(instance: &mut Instance<A>, req: &[u8]) -> VmResult<Vec<u8>>
 where
     A: BackendApi + 'static,
 {
-    call_raw(instance, "fetch", &[request], read_limits::RESULT_QUERY)
+    call_raw(instance, "fetch", &[req], read_limits::RESULT_QUERY)
 }
 
 /// Calls a function with the given arguments.
