@@ -8,14 +8,14 @@
 //! macro attribute from tableland-derive.
 use std::vec::Vec;
 
-use crate::deps::OwnedDeps;
+use crate::ctx::OwnedCtx;
 use crate::imports::ExternalApi;
 use crate::memory::{alloc, consume_region, release_buffer, Region};
 #[cfg(feature = "abort")]
 use crate::panic::install_panic_handler;
 use crate::results::{FuncResult, Response};
 use crate::types::Request;
-use crate::DepsMut;
+use crate::CtxMut;
 
 /// interface_version_* exports mark which Wasm VM interface level this contract is compiled for.
 /// They can be checked by tableland_vm.
@@ -57,7 +57,7 @@ macro_rules! r#try_into_func_result {
 /// This should be wrapped in an external "C" export, containing a contract-specific function as an argument.
 ///
 /// - `E`: error type for responses
-pub fn do_fetch<E>(fetch_fn: &dyn Fn(DepsMut, Request) -> Result<Response, E>, env_ptr: u32) -> u32
+pub fn do_fetch<E>(fetch_fn: &dyn Fn(CtxMut, Request) -> Result<Response, E>, env_ptr: u32) -> u32
 where
     E: ToString,
 {
@@ -69,7 +69,7 @@ where
 }
 
 fn _do_fetch<E>(
-    fetch_fn: &dyn Fn(DepsMut, Request) -> Result<Response, E>,
+    fetch_fn: &dyn Fn(CtxMut, Request) -> Result<Response, E>,
     env_ptr: *mut Region,
 ) -> FuncResult<Response>
 where
@@ -83,8 +83,8 @@ where
 }
 
 /// Makes all bridges to external dependencies (i.e. Wasm imports) that are injected by the VM
-pub(crate) fn make_dependencies() -> OwnedDeps<ExternalApi> {
-    OwnedDeps {
-        api: ExternalApi::new(),
+pub(crate) fn make_dependencies() -> OwnedCtx<ExternalApi> {
+    OwnedCtx {
+        tableland: ExternalApi::new(),
     }
 }

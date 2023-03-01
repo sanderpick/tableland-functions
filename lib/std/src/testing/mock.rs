@@ -1,6 +1,6 @@
 use serde_json::{from_slice, Value};
 
-use crate::deps::OwnedDeps;
+use crate::ctx::OwnedCtx;
 use crate::errors::StdResult;
 use crate::traits::Api;
 use crate::types::Request;
@@ -8,9 +8,9 @@ use crate::types::Request;
 const RESPONSE: &[u8] = include_bytes!("../../testdata/response.json");
 
 /// Creates all external requirements that can be injected for unit tests.
-pub fn mock_dependencies() -> OwnedDeps<MockApi> {
-    OwnedDeps {
-        api: MockApi::default(),
+pub fn mock_dependencies() -> OwnedCtx<MockApi> {
+    OwnedCtx {
+        tableland: MockApi::default(),
     }
 }
 

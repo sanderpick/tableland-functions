@@ -1,5 +1,4 @@
 use serde_json::{from_slice, to_string, Value};
-use tableland_std::Request;
 use tableland_vm::testing::mock_request;
 use tableland_vm::{call_fetch, Instance};
 
