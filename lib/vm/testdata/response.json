@@ -1,26 +1,122 @@
 [
-  { name: 'Maru', owner_name: 'Austin', type: 'cat' },
-  { name: 'Icey', owner_name: 'Blair', type: 'dog' },
-  { name: 'Maxie', owner_name: 'Blair', type: 'dog' },
-  { name: 'Rex', owner_name: 'Carolina', type: 'dog' },
-  { name: 'Harambe', owner_name: 'Dani', type: 'bird' },
-  { name: 'Syd', owner_name: 'Dani', type: 'dog' },
-  { name: 'Artemis', owner_name: 'Dani', type: 'cat' },
-  { name: 'Mr. Muggles', owner_name: 'Donald', type: 'cat' },
-  { name: 'Meowser', owner_name: 'Donald', type: 'cat' },
-  { name: 'Donald', owner_name: 'Donald', type: 'cat' },
-  { name: 'Hodor', owner_name: 'Eliza', type: 'bird' },
-  { name: 'Bumpkin', owner_name: 'Georgina', type: 'horse' },
-  { name: 'Secretariat', owner_name: 'Hillary', type: 'horse' },
-  { name: 'Socks', owner_name: 'Hillary', type: 'dog' },
-  { name: 'Sir Barks-Alot', owner_name: 'Liam', type: 'dog' },
-  { name: 'Harry Potter', owner_name: 'Leland', type: 'horse' },
-  { name: 'Xerses', owner_name: 'Michael', type: 'horse' },
-  { name: 'Zeus', owner_name: 'Michael', type: 'cat' },
-  { name: 'Rocket', owner_name: 'Phoebe', type: 'cat' },
-  { name: 'Kermit', owner_name: 'Sherry', type: 'dog' },
-  { name: 'Hector', owner_name: 'Sherry', type: 'dog' },
-  { name: 'Essy', owner_name: 'Sherry', type: 'dog' },
-  { name: 'Samwise', owner_name: 'Sherry', type: 'dog' },
-  { name: 'Jenkins', owner_name: 'Zed', type: 'horse' }
+  {
+    "name": "Maru",
+    "owner_name": "Austin",
+    "type": "cat"
+  },
+  {
+    "name": "Icey",
+    "owner_name": "Blair",
+    "type": "dog"
+  },
+  {
+    "name": "Maxie",
+    "owner_name": "Blair",
+    "type": "dog"
+  },
+  {
+    "name": "Rex",
+    "owner_name": "Carolina",
+    "type": "dog"
+  },
+  {
+    "name": "Harambe",
+    "owner_name": "Dani",
+    "type": "bird"
+  },
+  {
+    "name": "Syd",
+    "owner_name": "Dani",
+    "type": "dog"
+  },
+  {
+    "name": "Artemis",
+    "owner_name": "Dani",
+    "type": "cat"
+  },
+  {
+    "name": "Mr. Muggles",
+    "owner_name": "Donald",
+    "type": "cat"
+  },
+  {
+    "name": "Meowser",
+    "owner_name": "Donald",
+    "type": "cat"
+  },
+  {
+    "name": "Donald",
+    "owner_name": "Donald",
+    "type": "cat"
+  },
+  {
+    "name": "Hodor",
+    "owner_name": "Eliza",
+    "type": "bird"
+  },
+  {
+    "name": "Bumpkin",
+    "owner_name": "Georgina",
+    "type": "horse"
+  },
+  {
+    "name": "Secretariat",
+    "owner_name": "Hillary",
+    "type": "horse"
+  },
+  {
+    "name": "Socks",
+    "owner_name": "Hillary",
+    "type": "dog"
+  },
+  {
+    "name": "Sir Barks-Alot",
+    "owner_name": "Liam",
+    "type": "dog"
+  },
+  {
+    "name": "Harry Potter",
+    "owner_name": "Leland",
+    "type": "horse"
+  },
+  {
+    "name": "Xerses",
+    "owner_name": "Michael",
+    "type": "horse"
+  },
+  {
+    "name": "Zeus",
+    "owner_name": "Michael",
+    "type": "cat"
+  },
+  {
+    "name": "Rocket",
+    "owner_name": "Phoebe",
+    "type": "cat"
+  },
+  {
+    "name": "Kermit",
+    "owner_name": "Sherry",
+    "type": "dog"
+  },
+  {
+    "name": "Hector",
+    "owner_name": "Sherry",
+    "type": "dog"
+  },
+  {
+    "name": "Essy",
+    "owner_name": "Sherry",
+    "type": "dog"
+  },
+  {
+    "name": "Samwise",
+    "owner_name": "Sherry",
+    "type": "dog"
+  },
+  {
+    "name": "Jenkins",
+    "owner_name": "Zed",
+    "type": "horse"
+  }
 ]

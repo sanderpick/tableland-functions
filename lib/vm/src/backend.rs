@@ -1,7 +1,7 @@
+use serde_json::Value;
 use std::fmt::Debug;
 use std::ops::AddAssign;
 use std::string::FromUtf8Error;
-use tableland_std::Binary;
 use thiserror::Error;
 
 /// A structure that represents gas cost to be deducted from the remaining gas.
@@ -12,7 +12,7 @@ pub struct GasInfo {
     /// The gas cost of a computation that was executed already but not yet charged.
     ///
     /// This could be renamed to `internally_used` for consistency because it is used inside
-    /// of the `cosmwasm_vm`.
+    /// of the `tableland_vm`.
     pub cost: u64,
     /// Gas that was used and charged externally. This is needed to
     /// adjust the VM's gas limit but does not affect the gas usage.
@@ -80,7 +80,7 @@ pub struct Backend<A: BackendApi> {
 /// for backwards compatibility in systems that don't have them all.
 pub trait BackendApi: Clone + Send {
     /// Performs a Tableland read query.
-    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Binary>;
+    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Value>;
 }
 
 /// A result type for calling into the backend. Such a call can cause

@@ -15,7 +15,6 @@ mod instance;
 mod limited;
 mod memory;
 mod modules;
-mod sections;
 mod serde;
 mod size;
 mod static_analysis;

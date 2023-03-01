@@ -1,5 +1,5 @@
-use serde_json::{Error, Value};
-use tableland_std::{BlockInfo, Env, Response};
+use serde_json::{from_slice, to_string, Value};
+use tableland_std::{BlockInfo, Env};
 use tableland_vm::{call_fetch, Instance};
 
 use crate::backend::Api;
@@ -25,11 +25,12 @@ fn mock_env() -> Env {
 #[test]
 fn call_fetch_works() {
     let mut instance = create_function();
-    let res: Response = call_fetch(&mut instance, &mock_env()).unwrap().unwrap();
+    let res = call_fetch(&mut instance, &mock_env()).unwrap().unwrap();
     assert_eq!(true, res.data.is_some());
 
-    let json: Result<Value, Error> = serde_json::from_slice(res.data.unwrap().as_slice());
-    println!("{}", serde_json::to_string_pretty(&json.unwrap()).unwrap());
+    let data = res.data.unwrap().into_vec();
+    let json = from_slice::<Value>(data.as_slice()).unwrap();
+    println!("{}", to_string(&json).unwrap());
 
     let report = instance.create_gas_report();
     println!("{:?}", report);

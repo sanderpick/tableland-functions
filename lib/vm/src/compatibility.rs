@@ -94,7 +94,7 @@ fn check_interface_version(module: &Module) -> VmResult<()> {
                 Ok(())
             } else {
                 Err(VmError::static_validation_err(
-                    "Wasm contract has unknown interface_version_* marker export (see https://github.com/CosmWasm/cosmwasm/blob/main/packages/vm/README.md)",
+                    "Wasm contract has unknown interface_version_* marker export",
                 ))
             }
         }
@@ -196,7 +196,7 @@ mod tests {
         match check_wasm(CONTRACT_0_15, &default_capabilities()) {
             Err(VmError::StaticValidationErr { msg, .. }) => assert_eq!(
                 msg,
-                "Wasm contract has unknown interface_version_* marker export (see https://github.com/CosmWasm/cosmwasm/blob/main/packages/vm/README.md)"
+                "Wasm contract has unknown interface_version_* marker export"
             ),
             Err(e) => panic!("Unexpected error {:?}", e),
             Ok(_) => panic!("This must not succeeed"),
@@ -205,7 +205,7 @@ mod tests {
         match check_wasm(CONTRACT_0_14, &default_capabilities()) {
             Err(VmError::StaticValidationErr { msg, .. }) => assert_eq!(
                 msg,
-                "Wasm contract has unknown interface_version_* marker export (see https://github.com/CosmWasm/cosmwasm/blob/main/packages/vm/README.md)"
+                "Wasm contract has unknown interface_version_* marker export"
             ),
             Err(e) => panic!("Unexpected error {:?}", e),
             Ok(_) => panic!("This must not succeeed"),
@@ -421,7 +421,10 @@ mod tests {
         let module = deserialize_wasm(&wasm).unwrap();
         match check_interface_version(&module).unwrap_err() {
             VmError::StaticValidationErr { msg, .. } => {
-                assert_eq!(msg, "Wasm contract has unknown interface_version_* marker export (see https://github.com/CosmWasm/cosmwasm/blob/main/packages/vm/README.md)");
+                assert_eq!(
+                    msg,
+                    "Wasm contract has unknown interface_version_* marker export"
+                );
             }
             err => panic!("Unexpected error {:?}", err),
         }
@@ -442,7 +445,10 @@ mod tests {
         let module = deserialize_wasm(&wasm).unwrap();
         match check_interface_version(&module).unwrap_err() {
             VmError::StaticValidationErr { msg, .. } => {
-                assert_eq!(msg, "Wasm contract has unknown interface_version_* marker export (see https://github.com/CosmWasm/cosmwasm/blob/main/packages/vm/README.md)");
+                assert_eq!(
+                    msg,
+                    "Wasm contract has unknown interface_version_* marker export"
+                );
             }
             err => panic!("Unexpected error {:?}", err),
         }

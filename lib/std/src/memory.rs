@@ -4,7 +4,7 @@ use std::vec::Vec;
 /// Describes some data allocated in Wasm's linear memory.
 /// A pointer to an instance of this can be returned over FFI boundaries.
 ///
-/// This struct is crate internal since the cosmwasm-vm defines the same type independently.
+/// This struct is crate internal since the tableland-vm defines the same type independently.
 #[repr(C)]
 pub struct Region {
     /// The beginning of the region expressed as bytes from the beginning of the linear memory

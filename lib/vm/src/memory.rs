@@ -11,7 +11,7 @@ use crate::errors::{
 /// Describes some data allocated in Wasm's linear memory.
 /// A pointer to an instance of this can be returned over FFI boundaries.
 ///
-/// This is the same as `cosmwasm_std::memory::Region`
+/// This is the same as `tableland_std::memory::Region`
 /// but defined here to allow Wasmer specific implementation.
 #[repr(C)]
 #[derive(Default, Clone, Copy, Debug)]

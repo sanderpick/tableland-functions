@@ -4,8 +4,6 @@ use crate::conversion::{ref_to_u32, to_u32};
 use crate::environment::{process_gas_info, Environment};
 use crate::errors::{CommunicationError, VmError, VmResult};
 use crate::memory::{read_region, write_region};
-#[allow(unused_imports)]
-use crate::sections::encode_sections;
 use crate::serde::to_vec;
 
 /// A kibi (kilo binary)

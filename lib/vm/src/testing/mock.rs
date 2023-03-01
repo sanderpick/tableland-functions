@@ -1,4 +1,5 @@
-use tableland_std::{to_binary, Binary, BlockInfo, Env};
+use serde_json::{from_slice, Value};
+use tableland_std::{BlockInfo, Env};
 
 use crate::{Backend, BackendApi, BackendError, BackendResult, GasInfo};
 
@@ -46,7 +47,7 @@ impl Default for MockApi {
 }
 
 impl BackendApi for MockApi {
-    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Binary> {
+    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Value> {
         let mut gas_info = GasInfo::with_externally_used(
             GAS_COST_QUERY_FLAT + (GAS_COST_QUERY_REQUEST_MULTIPLIER * (statement.len() as u64)),
         );
@@ -54,13 +55,12 @@ impl BackendApi for MockApi {
             return (Err(BackendError::out_of_gas()), gas_info);
         }
 
-        let response = match to_binary(RESPONSE) {
+        let response = match from_slice(RESPONSE) {
             Ok(b) => b,
             Err(e) => return (Err(BackendError::UserErr { msg: e.to_string() }), gas_info),
         };
 
-        gas_info.externally_used +=
-            GAS_COST_QUERY_RESPONSE_MULTIPLIER * (to_binary(&response).unwrap().len() as u64);
+        gas_info.externally_used += GAS_COST_QUERY_RESPONSE_MULTIPLIER * (RESPONSE.len() as u64);
         if gas_info.externally_used > gas_limit {
             return (Err(BackendError::out_of_gas()), gas_info);
         }

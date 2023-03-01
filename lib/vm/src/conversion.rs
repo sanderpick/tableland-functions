@@ -3,7 +3,7 @@ use std::any::type_name;
 use crate::errors::{VmError, VmResult};
 
 /// Safely converts input of type T to u32.
-/// Errors with a cosmwasm_vm::errors::VmError::ConversionErr if conversion cannot be done.
+/// Errors with a tableland_vm::errors::VmError::ConversionErr if conversion cannot be done.
 pub fn to_u32<T: TryInto<u32> + ToString + Copy>(input: T) -> VmResult<u32> {
     input.try_into().map_err(|_| {
         VmError::conversion_err(type_name::<T>(), type_name::<u32>(), input.to_string())
@@ -11,7 +11,7 @@ pub fn to_u32<T: TryInto<u32> + ToString + Copy>(input: T) -> VmResult<u32> {
 }
 
 /// Safely converts input of type &T to u32.
-/// Errors with a cosmwasm_vm::errors::VmError::ConversionErr if conversion cannot be done.
+/// Errors with a tableland_vm::errors::VmError::ConversionErr if conversion cannot be done.
 pub fn ref_to_u32<T: TryInto<u32> + ToString + Clone>(input: &T) -> VmResult<u32> {
     input.clone().try_into().map_err(|_| {
         VmError::conversion_err(type_name::<T>(), type_name::<u32>(), input.to_string())
@@ -19,7 +19,7 @@ pub fn ref_to_u32<T: TryInto<u32> + ToString + Clone>(input: &T) -> VmResult<u32
 }
 
 /// Safely converts input of type T to i32.
-/// Errors with a cosmwasm_vm::errors::VmError::ConversionErr if conversion cannot be done.
+/// Errors with a tableland_vm::errors::VmError::ConversionErr if conversion cannot be done.
 ///
 /// Used in tests and in iterator, but not with default build
 #[allow(dead_code)]

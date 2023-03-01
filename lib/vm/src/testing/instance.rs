@@ -1,6 +1,6 @@
 //! This file has some helpers for integration tests.
 //! They should be imported via full path to ensure there is no confusion
-//! use cosmwasm_vm::testing::X
+//! use tableland_vm::testing::X
 use std::collections::HashSet;
 
 use crate::capabilities::capabilities_from_csv;

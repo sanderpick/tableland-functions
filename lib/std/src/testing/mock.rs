@@ -1,8 +1,9 @@
+use serde_json::{from_slice, Value};
+
 use crate::deps::OwnedDeps;
 use crate::errors::StdResult;
 use crate::traits::Api;
 use crate::types::{BlockInfo, Env};
-use crate::{to_binary, Binary};
 
 const RESPONSE: &[u8] = include_bytes!("../../testdata/response.json");
 
@@ -26,8 +27,8 @@ impl Default for MockApi {
 }
 
 impl Api for MockApi {
-    fn read(&self, _statement: &str) -> StdResult<Binary> {
-        to_binary(RESPONSE)
+    fn read(&self, _statement: &str) -> StdResult<Value> {
+        Ok(from_slice(RESPONSE).unwrap())
     }
 
     fn debug(&self, message: &str) {
@@ -56,6 +57,7 @@ mod tests {
     #[test]
     fn read_works() {
         let api = MockApi::default();
-        api.read("foobar123").unwrap();
+        let json = api.read("select * from my_table;").unwrap();
+        println!("{}", serde_json::to_string(&json).unwrap());
     }
 }

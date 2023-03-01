@@ -26,8 +26,8 @@ backtraces = ["tableland_std/backtraces", "tableland_vm/backtraces"]
 
 [dependencies]
 tableland_std = { path = "../../lib/std" }
-serde = { version = "1.0.103", default-features = false, features = ["derive"] }
 serde_json = "1.0.93"
+serde_bytes = "0.11.9"
 
 [dev-dependencies]
 tableland_vm = { path = "../../lib/vm" }

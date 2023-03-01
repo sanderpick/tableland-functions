@@ -58,5 +58,6 @@ pub fn instance_with_options(wasm: &[u8], options: ApiInstanceOptions) -> Instan
         gas_limit: options.gas_limit,
         print_debug: options.print_debug,
     };
+    // todo: catch error, could be bad wasm
     Instance::from_code(wasm, backend, options, memory_limit).unwrap()
 }

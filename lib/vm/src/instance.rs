@@ -48,8 +48,8 @@ impl<A> Instance<A>
 where
     A: BackendApi + 'static, // 'static is needed here to allow copying API instances into closures
 {
-    /// This is the only Instance constructor that can be called from outside of cosmwasm-vm,
-    /// e.g. in test code that needs a customized variant of cosmwasm_vm::testing::mock_instance*.
+    /// This is the only Instance constructor that can be called from outside of tableland-vm,
+    /// e.g. in test code that needs a customized variant of tableland_vm::testing::mock_instance*.
     pub fn from_code(
         code: &[u8],
         backend: Backend<A>,

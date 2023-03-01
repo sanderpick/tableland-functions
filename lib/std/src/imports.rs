@@ -1,12 +1,11 @@
-use crate::errors::StdResult;
+use serde_json::{from_slice, Value};
+use std::any::type_name;
+
+use crate::errors::{StdError, StdResult};
 use crate::memory::{build_region, consume_region, Region};
-use crate::serde::from_slice;
 use crate::traits::Api;
-use crate::Binary;
 
 // This interface will compile into required Wasm imports.
-// A complete documentation those functions is available in the VM that provides them:
-// https://github.com/CosmWasm/cosmwasm/blob/v1.0.0-beta/packages/vm/src/instance.rs#L89-L206
 extern "C" {
     /// Performs a Tableland read query.
     fn read(source_ptr: u32) -> u32;
@@ -31,14 +30,16 @@ impl ExternalApi {
 }
 
 impl Api for ExternalApi {
-    fn read(&self, statement: &str) -> StdResult<Binary> {
+    fn read(&self, statement: &str) -> StdResult<Value> {
         let req = build_region(statement.as_bytes());
         let request_ptr = &*req as *const Region as u32;
 
         let response_ptr = unsafe { read(request_ptr) };
         let response = unsafe { consume_region(response_ptr as *mut Region) };
 
-        from_slice(&response)
+        let data = from_slice(response.as_slice())
+            .map_err(|e| StdError::parse_err(type_name::<Value>(), e))?;
+        Ok(data)
     }
 
     fn debug(&self, message: &str) {

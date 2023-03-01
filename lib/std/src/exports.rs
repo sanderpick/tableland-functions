@@ -1,12 +1,11 @@
 //! exports exposes the public wasm API
 //!
 //! interface_version_8, allocate and deallocate turn into Wasm exports
-//! as soon as cosmwasm_std is `use`d in the contract, even privately.
+//! as soon as tableland_std is `use`d in the function, even privately.
 //!
-//! `do_execute`, `do_instantiate`, `do_migrate`, `do_query`, `do_reply`
-//! and `do_sudo` should be wrapped with a extern "C" entry point including
+//! `do_fetch` should be wrapped with a extern "C" entry point including
 //! the contract-specific function pointer. This is done via the `#[entry_point]`
-//! macro attribute from cosmwasm-derive.
+//! macro attribute from tableland-derive.
 use std::vec::Vec;
 
 use crate::deps::OwnedDeps;
@@ -14,13 +13,12 @@ use crate::imports::ExternalApi;
 use crate::memory::{alloc, consume_region, release_buffer, Region};
 #[cfg(feature = "abort")]
 use crate::panic::install_panic_handler;
-use crate::results::{ContractResult, Response};
-use crate::serde::{from_slice, to_vec};
+use crate::results::{FuncResult, Response};
 use crate::types::Env;
 use crate::DepsMut;
 
 /// interface_version_* exports mark which Wasm VM interface level this contract is compiled for.
-/// They can be checked by cosmwasm_vm.
+/// They can be checked by tableland_vm.
 /// Update this whenever the Wasm VM interface breaks.
 #[no_mangle]
 extern "C" fn interface_version_8() -> () {}
@@ -42,17 +40,17 @@ extern "C" fn deallocate(pointer: u32) {
 }
 
 // TODO: replace with https://doc.rust-lang.org/std/ops/trait.Try.html once stabilized
-macro_rules! r#try_into_contract_result {
+macro_rules! r#try_into_func_result {
     ($expr:expr) => {
         match $expr {
             Ok(val) => val,
             Err(err) => {
-                return ContractResult::Err(err.to_string());
+                return FuncResult::Err(err.to_string());
             }
         }
     };
     ($expr:expr,) => {
-        $crate::try_into_contract_result!($expr)
+        $crate::try_into_func_result!($expr)
     };
 }
 
@@ -66,19 +64,19 @@ where
     #[cfg(feature = "abort")]
     install_panic_handler();
     let res = _do_fetch::<E>(fetch_fn, env_ptr as *mut Region);
-    let v = to_vec(&res).unwrap();
+    let v = serde_json::to_vec(&res).unwrap();
     release_buffer(v) as u32
 }
 
 fn _do_fetch<E>(
     fetch_fn: &dyn Fn(DepsMut, Env) -> Result<Response, E>,
     env_ptr: *mut Region,
-) -> ContractResult<Response>
+) -> FuncResult<Response>
 where
     E: ToString,
 {
     let env: Vec<u8> = unsafe { consume_region(env_ptr) };
-    let env: Env = try_into_contract_result!(from_slice(&env));
+    let env: Env = try_into_func_result!(serde_json::from_slice(&env));
 
     let mut deps = make_dependencies();
     fetch_fn(deps.as_mut(), env).into()

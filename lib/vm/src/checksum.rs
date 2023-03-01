@@ -6,9 +6,6 @@ use crate::errors::VmError;
 
 /// A SHA-256 checksum of a Wasm blob, used to identify a Wasm code.
 /// This must remain stable since this checksum is stored in the blockchain state.
-///
-/// This is often referred to as "code ID" in go-cosmwasm, even if code ID
-/// usually refers to an auto-incrementing number.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Checksum([u8; 32]);
 

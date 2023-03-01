@@ -1,6 +1,5 @@
+use tableland_std::{FuncResult, Env, Response};
 use wasmer::Value;
-
-use tableland_std::{ContractResult, Env, Response};
 
 use crate::backend::BackendApi;
 use crate::conversion::ref_to_u32;
@@ -31,21 +30,13 @@ mod deserialization_limits {
     pub const RESULT_QUERY: usize = 256 * KI;
 }
 
-pub fn call_fetch<A>(instance: &mut Instance<A>, env: &Env) -> VmResult<ContractResult<Response>>
+pub fn call_fetch<A>(instance: &mut Instance<A>, env: &Env) -> VmResult<FuncResult<Response>>
 where
     A: BackendApi + 'static,
 {
     let env = to_vec(env)?;
     let data = call_fetch_raw(instance, &env)?;
-    let result: ContractResult<Response> = from_slice(&data, deserialization_limits::RESULT_QUERY)?;
-    // Ensure query response is valid JSON
-    // if let ContractResult::Ok(binary_response) = &result {
-    //     serde_json::from_slice::<serde_json::Value>(binary_response.as_slice()).map_err(|e| {
-    //         VmError::generic_err(format!("Query response must be valid JSON. {}", e))
-    //     })?;
-    // }
-
-    Ok(result)
+    from_slice::<FuncResult<Response>>(&data, deserialization_limits::RESULT_QUERY)
 }
 
 pub fn call_fetch_raw<A>(instance: &mut Instance<A>, env: &[u8]) -> VmResult<Vec<u8>>
