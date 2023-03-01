@@ -5,4 +5,4 @@
 
 mod mock;
 
-pub use mock::{mock_dependencies, mock_env, MockApi};
+pub use mock::{mock_dependencies, mock_request, MockApi};

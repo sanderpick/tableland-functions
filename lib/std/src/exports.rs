@@ -14,7 +14,7 @@ use crate::memory::{alloc, consume_region, release_buffer, Region};
 #[cfg(feature = "abort")]
 use crate::panic::install_panic_handler;
 use crate::results::{FuncResult, Response};
-use crate::types::Env;
+use crate::types::Request;
 use crate::DepsMut;
 
 /// interface_version_* exports mark which Wasm VM interface level this contract is compiled for.
@@ -57,7 +57,7 @@ macro_rules! r#try_into_func_result {
 /// This should be wrapped in an external "C" export, containing a contract-specific function as an argument.
 ///
 /// - `E`: error type for responses
-pub fn do_fetch<E>(fetch_fn: &dyn Fn(DepsMut, Env) -> Result<Response, E>, env_ptr: u32) -> u32
+pub fn do_fetch<E>(fetch_fn: &dyn Fn(DepsMut, Request) -> Result<Response, E>, env_ptr: u32) -> u32
 where
     E: ToString,
 {
@@ -69,14 +69,14 @@ where
 }
 
 fn _do_fetch<E>(
-    fetch_fn: &dyn Fn(DepsMut, Env) -> Result<Response, E>,
+    fetch_fn: &dyn Fn(DepsMut, Request) -> Result<Response, E>,
     env_ptr: *mut Region,
 ) -> FuncResult<Response>
 where
     E: ToString,
 {
     let env: Vec<u8> = unsafe { consume_region(env_ptr) };
-    let env: Env = try_into_func_result!(serde_json::from_slice(&env));
+    let env: Request = try_into_func_result!(serde_json::from_slice(&env));
 
     let mut deps = make_dependencies();
     fetch_fn(deps.as_mut(), env).into()

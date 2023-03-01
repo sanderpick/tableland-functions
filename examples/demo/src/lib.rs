@@ -1,9 +1,9 @@
 use serde_bytes::ByteBuf;
 use serde_json::to_vec;
-use tableland_std::{entry_point, DepsMut, Env, Response, StdResult};
+use tableland_std::{entry_point, DepsMut, Request, Response, StdResult};
 
 #[entry_point]
-pub fn fetch(deps: DepsMut, _env: Env) -> StdResult<Response> {
+pub fn fetch(deps: DepsMut, _req: Request) -> StdResult<Response> {
     let res = deps.api.read("select * from pets_31337_4")?;
     let json = to_vec(&res).unwrap();
 
@@ -14,7 +14,7 @@ pub fn fetch(deps: DepsMut, _env: Env) -> StdResult<Response> {
 mod tests {
     use super::*;
     use serde_json::{from_slice, to_string, Value};
-    use tableland_std::testing::{mock_dependencies, mock_env, MockApi};
+    use tableland_std::testing::{mock_dependencies, mock_request, MockApi};
     use tableland_std::OwnedDeps;
 
     fn create_function() -> OwnedDeps<MockApi> {
@@ -24,7 +24,7 @@ mod tests {
     #[test]
     fn call_fetch_works() {
         let mut deps = create_function();
-        let res = fetch(deps.as_mut(), mock_env()).unwrap();
+        let res = fetch(deps.as_mut(), mock_request()).unwrap();
         assert_eq!(true, res.data.is_some());
 
         let data = res.data.unwrap().into_vec();

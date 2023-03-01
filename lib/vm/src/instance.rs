@@ -245,8 +245,8 @@ mod tests {
     use crate::calls::call_fetch;
     use crate::errors::VmError;
     use crate::testing::{
-        mock_backend, mock_env, mock_instance, mock_instance_options,
-        mock_instance_with_failing_api, mock_instance_with_gas_limit, mock_instance_with_options,
+        mock_backend, mock_instance, mock_instance_options, mock_instance_with_failing_api,
+        mock_instance_with_gas_limit, mock_instance_with_options, mock_request,
         MockInstanceOptions,
     };
 
@@ -431,7 +431,7 @@ mod tests {
         // set up an instance that will experience an error in an import
         let error_message = "Api failed intentionally";
         let mut instance = mock_instance_with_failing_api(CONTRACT, error_message);
-        let init_result = call_fetch(&mut instance, &mock_env());
+        let init_result = call_fetch(&mut instance, &mock_request());
 
         match init_result.unwrap_err() {
             VmError::RuntimeErr { msg, .. } => assert!(msg.contains(error_message)),
@@ -545,7 +545,7 @@ mod tests {
 
         // init contract
         let msg = br#"{"verifier": "verifies", "beneficiary": "benefits"}"#;
-        call_fetch(&mut instance, &mock_env()).unwrap().unwrap();
+        call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
 
         let report2 = instance.create_gas_report();
         assert_eq!(report2.used_externally, 73);
@@ -563,7 +563,7 @@ mod tests {
         let orig_gas = instance.get_gas_left();
 
         // init contract
-        call_fetch(&mut instance, &mock_env()).unwrap().unwrap();
+        call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
 
         let init_used = orig_gas - instance.get_gas_left();
         assert_eq!(init_used, 5775750271);
@@ -574,11 +574,11 @@ mod tests {
         let mut instance = mock_instance(CONTRACT);
 
         // init contract
-        call_fetch(&mut instance, &mock_env()).unwrap().unwrap();
+        call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
 
         // // run contract - just sanity check - results validate in contract unit tests
         // let gas_before_execute = instance.get_gas_left();
-        // call_ex::<_, _, _, Empty>(&mut instance, &mock_env(), &info, msg)
+        // call_ex::<_, _, _, Empty>(&mut instance, &mock_request(), &info, msg)
         //     .unwrap()
         //     .unwrap();
         //
@@ -591,7 +591,7 @@ mod tests {
         let mut instance = mock_instance_with_gas_limit(CONTRACT, 20_000);
 
         // init contract
-        let res = call_fetch(&mut instance, &mock_env());
+        let res = call_fetch(&mut instance, &mock_request());
         assert!(res.is_err());
     }
 
@@ -602,7 +602,7 @@ mod tests {
     //     // init contract
     //     let info = mock_info("creator", &coins(1000, "earth"));
     //     let msg = br#"{"verifier": "verifies", "beneficiary": "benefits"}"#;
-    //     let _res = call_instantiate::<_, _, _, Empty>(&mut instance, &mock_env(), &info, msg)
+    //     let _res = call_instantiate::<_, _, _, Empty>(&mut instance, &mock_request(), &info, msg)
     //         .unwrap()
     //         .unwrap();
     //
@@ -610,7 +610,7 @@ mod tests {
     //     let gas_before_query = instance.get_gas_left();
     //     // we need to encode the key in base64
     //     let msg = br#"{"verifier":{}}"#;
-    //     let res = call_query(&mut instance, &mock_env(), msg).unwrap();
+    //     let res = call_query(&mut instance, &mock_request(), msg).unwrap();
     //     let answer = res.unwrap();
     //     assert_eq!(answer.as_slice(), b"{\"verifier\":\"verifies\"}");
     //

@@ -1,4 +1,4 @@
-use tableland_std::{FuncResult, Env, Response};
+use tableland_std::{FuncResult, Request, Response};
 use wasmer::Value;
 
 use crate::backend::BackendApi;
@@ -30,20 +30,23 @@ mod deserialization_limits {
     pub const RESULT_QUERY: usize = 256 * KI;
 }
 
-pub fn call_fetch<A>(instance: &mut Instance<A>, env: &Env) -> VmResult<FuncResult<Response>>
+pub fn call_fetch<A>(
+    instance: &mut Instance<A>,
+    request: &Request,
+) -> VmResult<FuncResult<Response>>
 where
     A: BackendApi + 'static,
 {
-    let env = to_vec(env)?;
-    let data = call_fetch_raw(instance, &env)?;
+    let request = to_vec(request)?;
+    let data = call_fetch_raw(instance, &request)?;
     from_slice::<FuncResult<Response>>(&data, deserialization_limits::RESULT_QUERY)
 }
 
-pub fn call_fetch_raw<A>(instance: &mut Instance<A>, env: &[u8]) -> VmResult<Vec<u8>>
+pub fn call_fetch_raw<A>(instance: &mut Instance<A>, request: &[u8]) -> VmResult<Vec<u8>>
 where
     A: BackendApi + 'static,
 {
-    call_raw(instance, "fetch", &[env], read_limits::RESULT_QUERY)
+    call_raw(instance, "fetch", &[request], read_limits::RESULT_QUERY)
 }
 
 /// Calls a function with the given arguments.

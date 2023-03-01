@@ -8,16 +8,14 @@ mod deps;
 mod errors;
 mod panic;
 mod results;
-// mod serde;
 mod traits;
 mod types;
 
 pub use crate::deps::{Deps, DepsMut, OwnedDeps};
 pub use crate::errors::{StdError, StdResult};
 pub use crate::results::{FuncResult, Response};
-// pub use crate::serde::{from_binary, from_slice, to_binary, to_vec};
 pub use crate::traits::Api;
-pub use crate::types::{BlockInfo, Env};
+pub use crate::types::Request;
 
 // Exposed in wasm build only
 

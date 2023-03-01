@@ -1,5 +1,6 @@
 use serde_json::{from_slice, to_string, Value};
-use tableland_std::{BlockInfo, Env};
+use tableland_std::Request;
+use tableland_vm::testing::mock_request;
 use tableland_vm::{call_fetch, Instance};
 
 use crate::backend::Api;
@@ -13,19 +14,10 @@ fn create_function() -> Instance<Api> {
     instance_with_gas_limit(WASM, gas_limit)
 }
 
-fn mock_env() -> Env {
-    Env {
-        block: BlockInfo {
-            height: 12_345,
-            chain_id: "yoyo".to_string(),
-        },
-    }
-}
-
 #[test]
 fn call_fetch_works() {
     let mut instance = create_function();
-    let res = call_fetch(&mut instance, &mock_env()).unwrap().unwrap();
+    let res = call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
     assert_eq!(true, res.data.is_some());
 
     let data = res.data.unwrap().into_vec();

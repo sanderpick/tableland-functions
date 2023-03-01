@@ -3,7 +3,7 @@ use serde_json::{from_slice, Value};
 use crate::deps::OwnedDeps;
 use crate::errors::StdResult;
 use crate::traits::Api;
-use crate::types::{BlockInfo, Env};
+use crate::types::Request;
 
 const RESPONSE: &[u8] = include_bytes!("../../testdata/response.json");
 
@@ -36,17 +36,10 @@ impl Api for MockApi {
     }
 }
 
-/// Returns a default enviroment with height, time, chain_id, and contract address
-/// You can submit as is to most contracts, or modify height/time if you want to
-/// test for expiration.
-///
-/// This is intended for use in test code only.
-pub fn mock_env() -> Env {
-    Env {
-        block: BlockInfo {
-            height: 12_345,
-            chain_id: "yoyo".to_string(),
-        },
+pub fn mock_request() -> Request {
+    Request {
+        path: "/".to_string(),
+        method: "GET".to_string(),
     }
 }
 

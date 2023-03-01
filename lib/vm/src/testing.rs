@@ -9,4 +9,4 @@ pub use instance::{
     mock_instance, mock_instance_options, mock_instance_with_failing_api,
     mock_instance_with_gas_limit, mock_instance_with_options, test_io, MockInstanceOptions,
 };
-pub use mock::{mock_backend, mock_env, MockApi};
+pub use mock::{mock_backend, mock_request, MockApi};

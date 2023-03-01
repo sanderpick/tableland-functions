@@ -1,5 +1,5 @@
 use serde_json::{from_slice, Value};
-use tableland_std::{BlockInfo, Env};
+use tableland_std::Request;
 
 use crate::{Backend, BackendApi, BackendError, BackendResult, GasInfo};
 
@@ -69,17 +69,10 @@ impl BackendApi for MockApi {
     }
 }
 
-/// Returns a default enviroment with height, time, chain_id, and contract address
-/// You can submit as is to most contracts, or modify height/time if you want to
-/// test for expiration.
-///
-/// This is intended for use in test code only.
-pub fn mock_env() -> Env {
-    Env {
-        block: BlockInfo {
-            height: 12_345,
-            chain_id: "yoyo".to_string(),
-        },
+pub fn mock_request() -> Request {
+    Request {
+        path: "/".to_string(),
+        method: "GET".to_string(),
     }
 }
 
