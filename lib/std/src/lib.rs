@@ -5,17 +5,15 @@
 // Exposed on all platforms
 
 mod ctx;
-mod errors;
+mod http;
 mod panic;
 mod results;
 mod traits;
-mod types;
 
 pub use crate::ctx::{Ctx, CtxMut, OwnedCtx};
-pub use crate::errors::{StdError, StdResult};
-pub use crate::results::{FuncResult, Response};
+pub use crate::http::{Error, Request, Response, Result, Router};
+pub use crate::results::FuncResult;
 pub use crate::traits::Api;
-pub use crate::types::Request;
 
 // Exposed in wasm build only
 

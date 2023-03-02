@@ -1,7 +1,7 @@
 use serde_json::{from_slice, Value};
 use std::any::type_name;
 
-use crate::errors::{StdError, StdResult};
+use crate::http::{Error, Result};
 use crate::memory::{build_region, consume_region, Region};
 use crate::traits::Api;
 
@@ -30,7 +30,7 @@ impl ExternalApi {
 }
 
 impl Api for ExternalApi {
-    fn read(&self, statement: &str) -> StdResult<Value> {
+    fn read(&self, statement: &str) -> Result<Value> {
         let req = build_region(statement.as_bytes());
         let request_ptr = &*req as *const Region as u32;
 
@@ -38,7 +38,7 @@ impl Api for ExternalApi {
         let response = unsafe { consume_region(response_ptr as *mut Region) };
 
         let data = from_slice(response.as_slice())
-            .map_err(|e| StdError::parse_err(type_name::<Value>(), e))?;
+            .map_err(|e| Error::parse_err(type_name::<Value>(), e))?;
         Ok(data)
     }
 

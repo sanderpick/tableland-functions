@@ -1,9 +1,8 @@
 use serde_json::{from_slice, Value};
 
 use crate::ctx::OwnedCtx;
-use crate::errors::StdResult;
+use crate::http::{Request, Result};
 use crate::traits::Api;
-use crate::types::Request;
 
 const RESPONSE: &[u8] = include_bytes!("../../testdata/response.json");
 
@@ -14,9 +13,6 @@ pub fn mock_dependencies() -> OwnedCtx<MockApi> {
     }
 }
 
-// MockPrecompiles zero pads all human addresses to make them fit the canonical_length
-// it trims off zeros for the reverse operation.
-// not really smart, but allows us to see a difference (and consistent length for canonical adddresses)
 #[derive(Copy, Clone)]
 pub struct MockApi {}
 
@@ -27,7 +23,7 @@ impl Default for MockApi {
 }
 
 impl Api for MockApi {
-    fn read(&self, _statement: &str) -> StdResult<Value> {
+    fn read(&self, _statement: &str) -> Result<Value> {
         Ok(from_slice(RESPONSE).unwrap())
     }
 
@@ -36,11 +32,13 @@ impl Api for MockApi {
     }
 }
 
-pub fn mock_request() -> Request {
-    Request {
-        path: "/".to_string(),
-        method: "GET".to_string(),
-    }
+pub fn mock_get_request() -> Request {
+    Request::new(
+        http::uri::Uri::from_static("/"),
+        http::method::Method::GET,
+        http::header::HeaderMap::default(),
+        None,
+    )
 }
 
 #[cfg(test)]

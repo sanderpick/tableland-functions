@@ -1,6 +1,5 @@
-use serde_json::{from_slice, to_string, Value};
 use tableland_vm::{
-    testing::{fetch, mock_instance_with_gas_limit, mock_request, MockApi},
+    testing::{fetch, mock_get_request, mock_instance_with_gas_limit, MockApi},
     Instance,
 };
 
@@ -14,12 +13,8 @@ fn create_function() -> Instance<MockApi> {
 #[test]
 fn call_fetch_works() {
     let mut instance = create_function();
-    let res = fetch(&mut instance, mock_request()).unwrap();
-    assert_eq!(true, res.data.is_some());
-
-    let data = res.data.unwrap().into_vec();
-    let json = from_slice::<Value>(data.as_slice()).unwrap();
-    println!("{}", to_string(&json).unwrap());
+    let res = fetch(&mut instance, mock_get_request("/dog")).unwrap();
+    assert_eq!(res.status_code(), 200);
 
     let report = instance.create_gas_report();
     println!("{:?}", report);

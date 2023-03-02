@@ -1,6 +1,6 @@
 use serde_json::Value;
 
-use crate::errors::StdResult;
+use crate::http::Result;
 
 /// Api are callbacks to system functions implemented outside of the wasm modules.
 /// Currently it just supports address conversion but we could add eg. crypto functions here.
@@ -18,7 +18,7 @@ use crate::errors::StdResult;
 /// for backwards compatibility in systems that don't have them all.
 pub trait Api {
     /// Performs a Tableland read query.
-    fn read(&self, statement: &str) -> StdResult<Value>;
+    fn read(&self, statement: &str) -> Result<Value>;
 
     /// Emits a debugging message that is handled depending on the environment (typically printed to console or ignored).
     /// Those messages are not persisted to chain.

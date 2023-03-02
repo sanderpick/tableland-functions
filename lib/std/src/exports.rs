@@ -9,12 +9,12 @@
 use std::vec::Vec;
 
 use crate::ctx::OwnedCtx;
+use crate::http::{Request, Response};
 use crate::imports::ExternalApi;
 use crate::memory::{alloc, consume_region, release_buffer, Region};
 #[cfg(feature = "abort")]
 use crate::panic::install_panic_handler;
-use crate::results::{FuncResult, Response};
-use crate::types::Request;
+use crate::results::FuncResult;
 use crate::CtxMut;
 
 /// interface_version_* exports mark which Wasm VM interface level this contract is compiled for.

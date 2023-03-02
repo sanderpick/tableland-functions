@@ -17,6 +17,7 @@ default = []
 backtraces = []
 
 [dependencies]
+http = "0.2.9"
 loupe = "0.1.3"
 parity-wasm = "0.45.0"
 serde = { version = "1.0.152", default-features = false, features = ["derive", "alloc"] }

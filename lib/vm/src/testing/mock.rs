@@ -69,11 +69,13 @@ impl BackendApi for MockApi {
     }
 }
 
-pub fn mock_request() -> Request {
-    Request {
-        path: "/".to_string(),
-        method: "GET".to_string(),
-    }
+pub fn mock_get_request(path: &'static str) -> Request {
+    Request::new(
+        http::uri::Uri::from_static(path),
+        http::method::Method::GET,
+        http::header::HeaderMap::default(),
+        None,
+    )
 }
 
 #[cfg(test)]

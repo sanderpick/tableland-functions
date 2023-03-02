@@ -6,7 +6,6 @@ members = [
     "lib/client",
     "lib/client/types",
     "lib/derive",
-    "lib/router",
     "lib/std",
     "lib/vm",
     "lib/worker",

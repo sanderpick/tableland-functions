@@ -245,8 +245,8 @@ mod tests {
     use crate::calls::call_fetch;
     use crate::errors::VmError;
     use crate::testing::{
-        mock_backend, mock_instance, mock_instance_options, mock_instance_with_failing_api,
-        mock_instance_with_gas_limit, mock_instance_with_options, mock_request,
+        mock_backend, mock_get_request, mock_instance, mock_instance_options,
+        mock_instance_with_failing_api, mock_instance_with_gas_limit, mock_instance_with_options,
         MockInstanceOptions,
     };
 
@@ -431,7 +431,7 @@ mod tests {
         // set up an instance that will experience an error in an import
         let error_message = "Api failed intentionally";
         let mut instance = mock_instance_with_failing_api(CONTRACT, error_message);
-        let init_result = call_fetch(&mut instance, &mock_request());
+        let init_result = call_fetch(&mut instance, &mock_get_request("/"));
 
         match init_result.unwrap_err() {
             VmError::RuntimeErr { msg, .. } => assert!(msg.contains(error_message)),
@@ -543,7 +543,9 @@ mod tests {
         assert_eq!(report1.limit, LIMIT);
         assert_eq!(report1.remaining, LIMIT);
 
-        call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
+        call_fetch(&mut instance, &mock_get_request("/"))
+            .unwrap()
+            .unwrap();
 
         let report2 = instance.create_gas_report();
         assert_eq!(report2.used_externally, 73);
@@ -560,7 +562,9 @@ mod tests {
         let mut instance = mock_instance(CONTRACT);
         let orig_gas = instance.get_gas_left();
 
-        call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
+        call_fetch(&mut instance, &mock_get_request("/"))
+            .unwrap()
+            .unwrap();
 
         let init_used = orig_gas - instance.get_gas_left();
         assert_eq!(init_used, 5775750271);
@@ -570,7 +574,9 @@ mod tests {
     fn contract_deducts_gas_execute() {
         let mut instance = mock_instance(CONTRACT);
 
-        call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
+        call_fetch(&mut instance, &mock_get_request("/"))
+            .unwrap()
+            .unwrap();
 
         // // run contract - just sanity check - results validate in contract unit tests
         // let gas_before_execute = instance.get_gas_left();
@@ -586,7 +592,7 @@ mod tests {
     fn contract_enforces_gas_limit() {
         let mut instance = mock_instance_with_gas_limit(CONTRACT, 20_000);
 
-        let res = call_fetch(&mut instance, &mock_request());
+        let res = call_fetch(&mut instance, &mock_get_request("/"));
         assert!(res.is_err());
     }
 

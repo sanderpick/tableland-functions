@@ -1,5 +1,5 @@
-use serde_json::{from_slice, to_string, Value};
-use tableland_vm::testing::mock_request;
+use serde_json::{to_string, Value};
+use tableland_vm::testing::mock_get_request;
 use tableland_vm::{call_fetch, Instance};
 
 use crate::backend::Api;
@@ -16,11 +16,12 @@ fn create_function() -> Instance<Api> {
 #[test]
 fn call_fetch_works() {
     let mut instance = create_function();
-    let res = call_fetch(&mut instance, &mock_request()).unwrap().unwrap();
-    assert_eq!(true, res.data.is_some());
+    let mut res = call_fetch(&mut instance, &mock_get_request("/dog"))
+        .unwrap()
+        .unwrap();
+    assert_eq!(res.status_code(), 200);
 
-    let data = res.data.unwrap().into_vec();
-    let json = from_slice::<Value>(data.as_slice()).unwrap();
+    let json = res.json::<Value>().unwrap();
     println!("{}", to_string(&json).unwrap());
 
     let report = instance.create_gas_report();
