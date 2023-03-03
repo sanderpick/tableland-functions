@@ -6,6 +6,7 @@
 //! `do_fetch` should be wrapped with a extern "C" entry point including
 //! the contract-specific function pointer. This is done via the `#[entry_point]`
 //! macro attribute from tableland-derive.
+use serde_json::{from_slice, to_vec};
 use std::vec::Vec;
 
 use crate::ctx::OwnedCtx;
@@ -64,7 +65,7 @@ where
     #[cfg(feature = "abort")]
     install_panic_handler();
     let res = _do_fetch::<E>(fetch_fn, req_ptr as *mut Region);
-    let v = serde_json::to_vec(&res).unwrap();
+    let v = to_vec(&res).unwrap();
     release_buffer(v) as u32
 }
 
@@ -76,7 +77,7 @@ where
     E: ToString,
 {
     let req: Vec<u8> = unsafe { consume_region(req_ptr) };
-    let req: Request = try_into_func_result!(serde_json::from_slice(&req));
+    let req: Request = try_into_func_result!(from_slice(&req));
 
     let mut ctx = make_ctx();
     fetch_fn(req, ctx.as_mut()).into()

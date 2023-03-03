@@ -7,8 +7,8 @@ use crate::calls::call_fetch;
 use crate::instance::Instance;
 use crate::BackendApi;
 
-/// Mimicks the call signature of the smart contracts.
-/// Thus it moves env and msg rather than take them as reference.
+/// Mimicks the call signature of the functions.
+/// Thus it moves req rather than take it as reference.
 /// This is inefficient here, but only used in test code.
 pub fn fetch<A>(instance: &mut Instance<A>, req: Request) -> FuncResult<Response>
 where

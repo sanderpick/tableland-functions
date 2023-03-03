@@ -8,11 +8,13 @@ mod ctx;
 mod http;
 mod panic;
 mod results;
+mod tableland;
 mod traits;
 
 pub use crate::ctx::{Ctx, CtxMut, OwnedCtx};
 pub use crate::http::{Error, Request, Response, Result, Router};
 pub use crate::results::FuncResult;
+pub use crate::tableland::ReadRequest;
 pub use crate::traits::Api;
 
 // Exposed in wasm build only

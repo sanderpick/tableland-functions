@@ -3,6 +3,7 @@ use tableland_client::{chains::ChainID, TablelandClient};
 use tableland_client_types::ReadOptions;
 use tableland_vm::{BackendApi, BackendError, BackendResult, GasInfo};
 
+/// Base gas per request
 const GAS_COST_QUERY_FLAT: u64 = 100_000;
 /// Gas per request byte
 const GAS_COST_QUERY_REQUEST_MULTIPLIER: u64 = 0;
@@ -22,7 +23,7 @@ impl Api {
 }
 
 impl BackendApi for Api {
-    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Value> {
+    fn read(&self, statement: &str, options: ReadOptions, gas_limit: u64) -> BackendResult<Value> {
         let mut gas_info = GasInfo::with_externally_used(
             GAS_COST_QUERY_FLAT + (GAS_COST_QUERY_REQUEST_MULTIPLIER * (statement.len() as u64)),
         );
@@ -30,7 +31,7 @@ impl BackendApi for Api {
             return (Err(BackendError::out_of_gas()), gas_info);
         }
 
-        let (val, len) = match self.client.read(statement, ReadOptions::default()) {
+        let (val, len) = match self.client.read(statement, options) {
             Ok(res) => res,
             Err(e) => return (Err(BackendError::UserErr { msg: e.to_string() }), gas_info),
         };
@@ -53,8 +54,12 @@ mod tests {
     #[test]
     fn read_works() {
         let api = Api::new();
-        api.read("select * from my_table", DEFAULT_QUERY_GAS_LIMIT)
-            .0
-            .unwrap();
+        api.read(
+            "select * from my_table",
+            ReadOptions::default(),
+            DEFAULT_QUERY_GAS_LIMIT,
+        )
+        .0
+        .unwrap();
     }
 }

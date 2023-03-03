@@ -1,8 +1,10 @@
-use serde_json::{from_slice, Value};
+use serde_json::{from_slice, to_vec, Value};
 use std::any::type_name;
+use tableland_client_types::ReadOptions;
 
 use crate::http::{Error, Result};
 use crate::memory::{build_region, consume_region, Region};
+use crate::tableland::ReadRequest;
 use crate::traits::Api;
 
 // This interface will compile into required Wasm imports.
@@ -30,15 +32,19 @@ impl ExternalApi {
 }
 
 impl Api for ExternalApi {
-    fn read(&self, statement: &str) -> Result<Value> {
-        let req = build_region(statement.as_bytes());
-        let request_ptr = &*req as *const Region as u32;
+    fn read(&self, statement: &str, options: ReadOptions) -> Result<Value> {
+        let req = ReadRequest {
+            stm: statement.to_string(),
+            opts: options,
+        };
+        let data = to_vec(&req).unwrap();
+        let src = build_region(&data);
+        let src_ptr = &*src as *const Region as u32;
 
-        let response_ptr = unsafe { read(request_ptr) };
-        let response = unsafe { consume_region(response_ptr as *mut Region) };
+        let res_ptr = unsafe { read(src_ptr) };
+        let res = unsafe { consume_region(res_ptr as *mut Region) };
 
-        let data = from_slice(response.as_slice())
-            .map_err(|e| Error::parse_err(type_name::<Value>(), e))?;
+        let data = from_slice(&res).map_err(|e| Error::parse_err(type_name::<Value>(), e))?;
         Ok(data)
     }
 

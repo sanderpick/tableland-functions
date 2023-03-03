@@ -1,9 +1,9 @@
 //! Router support for a Worker.
 //! This is a modified version of https://github.com/cloudflare/workers-rs/blob/main/worker/src/router.rs.
-
 use http::Method;
 use matchit::{Match, Node, Params};
 use std::collections::HashMap;
+
 use crate::CtxMut;
 
 use super::{Error, Request, Response};

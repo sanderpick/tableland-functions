@@ -1,10 +1,12 @@
 //! Import implementations
+use tableland_std::ReadRequest;
+
 use crate::backend::BackendApi;
 use crate::conversion::{ref_to_u32, to_u32};
 use crate::environment::{process_gas_info, Environment};
 use crate::errors::{CommunicationError, VmError, VmResult};
 use crate::memory::{read_region, write_region};
-use crate::serde::to_vec;
+use crate::serde::{from_slice, to_vec};
 
 /// A kibi (kilo binary)
 const KI: usize = 1024;
@@ -33,13 +35,15 @@ pub fn do_read<A: BackendApi>(env: &Environment<A>, request_ptr: u32) -> VmResul
         return write_to_contract::<A>(env, b"Input is empty");
     }
 
-    let request_string = match String::from_utf8(request) {
+    let request: ReadRequest = match from_slice(&request, MAX_LENGTH_QUERY_REQUEST) {
         Ok(s) => s,
-        Err(_) => return write_to_contract::<A>(env, b"Input is not valid UTF-8"),
+        Err(_) => return write_to_contract::<A>(env, b"Input is not valid JSON"),
     };
 
     let gas_remaining = env.get_gas_left();
-    let (result, gas_info) = env.api.read(&request_string, gas_remaining);
+    let (result, gas_info) = env
+        .api
+        .read(request.stm.as_str(), request.opts, gas_remaining);
     process_gas_info::<A>(env, gas_info)?;
     let serialized = to_vec(&result?)?;
     write_to_contract::<A>(env, &serialized)

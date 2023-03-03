@@ -1,5 +1,4 @@
 use std::sync::Arc;
-
 use wasmer::{Module, ModuleMiddleware};
 
 use crate::errors::VmResult;

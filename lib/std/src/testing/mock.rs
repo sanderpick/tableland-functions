@@ -1,4 +1,5 @@
 use serde_json::{from_slice, Value};
+use tableland_client_types::ReadOptions;
 
 use crate::ctx::OwnedCtx;
 use crate::http::{Request, Result};
@@ -23,7 +24,7 @@ impl Default for MockApi {
 }
 
 impl Api for MockApi {
-    fn read(&self, _statement: &str) -> Result<Value> {
+    fn read(&self, _statement: &str, _options: ReadOptions) -> Result<Value> {
         Ok(from_slice(RESPONSE).unwrap())
     }
 
@@ -32,9 +33,9 @@ impl Api for MockApi {
     }
 }
 
-pub fn mock_get_request() -> Request {
+pub fn mock_get_request(path: &'static str) -> Request {
     Request::new(
-        http::uri::Uri::from_static("/"),
+        http::uri::Uri::from_static(path),
         http::method::Method::GET,
         http::header::HeaderMap::default(),
         None,

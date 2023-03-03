@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 use thiserror::Error;
 
 /// An error validating a Region

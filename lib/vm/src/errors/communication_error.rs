@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 use thiserror::Error;
 
 use super::region_validation_error::RegionValidationError;

@@ -1,6 +1,5 @@
 //! Copied from https://github.com/fiberplane/fp-bindgen/blob/main/fp-bindgen-support/src/http/mod.rs.
 //! Licensed under Apache/MIT
-
 use http::{header::HeaderName, method::Method, uri::Uri};
 use serde::{
     de::{self},

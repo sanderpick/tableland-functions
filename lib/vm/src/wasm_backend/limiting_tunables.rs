@@ -1,7 +1,6 @@
+use loupe::MemoryUsage;
 use std::ptr::NonNull;
 use std::sync::Arc;
-
-use loupe::MemoryUsage;
 use wasmer::{
     vm::{self, MemoryError, MemoryStyle, TableStyle, VMMemoryDefinition, VMTableDefinition},
     MemoryType, Pages, TableType, Tunables,

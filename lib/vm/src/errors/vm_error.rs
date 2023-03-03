@@ -1,6 +1,5 @@
 #[cfg(feature = "backtraces")]
 use std::backtrace::Backtrace;
-use std::fmt::{Debug, Display};
 use thiserror::Error;
 
 use super::communication_error::CommunicationError;
@@ -50,13 +49,6 @@ pub enum VmError {
     },
     #[error("Ran out of gas during contract execution")]
     GasDepletion {
-        #[cfg(feature = "backtraces")]
-        backtrace: Backtrace,
-    },
-    /// Whenever there is no specific error type available
-    #[error("Generic error: {msg}")]
-    GenericErr {
-        msg: String,
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,
     },
@@ -132,11 +124,6 @@ pub enum VmError {
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,
     },
-    #[error("Must not call a writing storage function in this context.")]
-    WriteAccessDenied {
-        #[cfg(feature = "backtraces")]
-        backtrace: Backtrace,
-    },
 }
 
 impl VmError {
@@ -193,15 +180,6 @@ impl VmError {
         }
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn generic_err(msg: impl Into<String>) -> Self {
-        VmError::GenericErr {
-            msg: msg.into(),
-            #[cfg(feature = "backtraces")]
-            backtrace: Backtrace::capture(),
-        }
-    }
-
     pub(crate) fn instantiation_err(msg: impl Into<String>) -> Self {
         VmError::InstantiationErr {
             msg: msg.into(),
@@ -218,7 +196,7 @@ impl VmError {
         }
     }
 
-    pub(crate) fn parse_err(target: impl Into<String>, msg: impl Display) -> Self {
+    pub(crate) fn parse_err(target: impl Into<String>, msg: impl std::fmt::Display) -> Self {
         VmError::ParseErr {
             target_type: target.into(),
             msg: msg.to_string(),
@@ -236,7 +214,7 @@ impl VmError {
         }
     }
 
-    pub(crate) fn serialize_err(source: impl Into<String>, msg: impl Display) -> Self {
+    pub(crate) fn serialize_err(source: impl Into<String>, msg: impl std::fmt::Display) -> Self {
         VmError::SerializeErr {
             source_type: source.into(),
             msg: msg.to_string(),
@@ -289,14 +267,6 @@ impl VmError {
     pub(crate) fn uninitialized_context_data(kind: impl Into<String>) -> Self {
         VmError::UninitializedContextData {
             kind: kind.into(),
-            #[cfg(feature = "backtraces")]
-            backtrace: Backtrace::capture(),
-        }
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn write_access_denied() -> Self {
-        VmError::WriteAccessDenied {
             #[cfg(feature = "backtraces")]
             backtrace: Backtrace::capture(),
         }
@@ -431,18 +401,6 @@ mod tests {
     }
 
     #[test]
-    fn generic_err_works() {
-        let guess = 7;
-        let error = VmError::generic_err(format!("{} is too low", guess));
-        match error {
-            VmError::GenericErr { msg, .. } => {
-                assert_eq!(msg, String::from("7 is too low"));
-            }
-            e => panic!("Unexpected error: {:?}", e),
-        }
-    }
-
-    #[test]
     fn instantiation_err_works() {
         let error = VmError::instantiation_err("something went wrong");
         match error {
@@ -538,15 +496,6 @@ mod tests {
         let error = VmError::uninitialized_context_data("foo");
         match error {
             VmError::UninitializedContextData { kind, .. } => assert_eq!(kind, "foo"),
-            e => panic!("Unexpected error: {:?}", e),
-        }
-    }
-
-    #[test]
-    fn write_access_denied() {
-        let error = VmError::write_access_denied();
-        match error {
-            VmError::WriteAccessDenied { .. } => {}
             e => panic!("Unexpected error: {:?}", e),
         }
     }

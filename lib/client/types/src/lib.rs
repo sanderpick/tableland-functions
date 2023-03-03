@@ -1,19 +1,18 @@
 use serde::{Deserialize, Serialize};
-use std::fmt::{Display, Formatter, Result};
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub enum Format {
     Objects,
     Table,
 }
 
-impl Display for Format {
-    fn fmt(&self, formatter: &mut Formatter) -> Result {
+impl std::fmt::Display for Format {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(formatter, "{}", format!("{:?}", self).to_lowercase())
     }
 }
 
-#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct ReadOptions {
     pub format: Format,
     pub extract: bool,

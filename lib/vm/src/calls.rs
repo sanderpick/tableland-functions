@@ -16,7 +16,8 @@ use crate::serde::{from_slice, to_vec};
 mod read_limits {
     /// A mibi (mega binary)
     const MI: usize = 1024 * 1024;
-    pub const RESULT_QUERY: usize = 64 * MI;
+    /// Max length (in bytes) of the result data from a fetch call.
+    pub const RESULT_FETCH: usize = 64 * MI;
 }
 
 /// The limits for the JSON deserialization.
@@ -26,8 +27,8 @@ mod read_limits {
 mod deserialization_limits {
     /// A kibi (kilo binary)
     const KI: usize = 1024;
-    /// Max length (in bytes) of the result data from a query call.
-    pub const RESULT_QUERY: usize = 256 * KI;
+    /// Max length (in bytes) of the result data from a fetch call.
+    pub const RESULT_FETCH: usize = 256 * KI;
 }
 
 pub fn call_fetch<A>(instance: &mut Instance<A>, req: &Request) -> VmResult<FuncResult<Response>>
@@ -36,14 +37,14 @@ where
 {
     let req = to_vec(req)?;
     let data = call_fetch_raw(instance, &req)?;
-    from_slice::<FuncResult<Response>>(&data, deserialization_limits::RESULT_QUERY)
+    from_slice::<FuncResult<Response>>(&data, deserialization_limits::RESULT_FETCH)
 }
 
 pub fn call_fetch_raw<A>(instance: &mut Instance<A>, req: &[u8]) -> VmResult<Vec<u8>>
 where
     A: BackendApi + 'static,
 {
-    call_raw(instance, "fetch", &[req], read_limits::RESULT_QUERY)
+    call_raw(instance, "fetch", &[req], read_limits::RESULT_FETCH)
 }
 
 /// Calls a function with the given arguments.

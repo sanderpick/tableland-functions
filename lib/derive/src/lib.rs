@@ -9,7 +9,6 @@ pub fn entry_point(_attr: TokenStream, mut item: TokenStream) -> TokenStream {
     let cloned = item.clone();
     let function = parse_macro_input!(cloned as syn::ItemFn);
     let name = function.sig.ident.to_string();
-    // The first argument is `deps`, the rest is region pointers
     let args = function.sig.inputs.len() - 1;
 
     // E.g. "ptr0: u32, ptr1: u32, ptr2: u32, "

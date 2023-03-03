@@ -1,7 +1,5 @@
 use serde_json::Value;
-use std::fmt::Debug;
-use std::ops::AddAssign;
-use std::string::FromUtf8Error;
+use tableland_client_types::ReadOptions;
 use thiserror::Error;
 
 /// A structure that represents gas cost to be deducted from the remaining gas.
@@ -52,7 +50,7 @@ impl GasInfo {
     }
 }
 
-impl AddAssign for GasInfo {
+impl std::ops::AddAssign for GasInfo {
     fn add_assign(&mut self, other: Self) {
         *self = GasInfo {
             cost: self.cost + other.cost,
@@ -80,7 +78,7 @@ pub struct Backend<A: BackendApi> {
 /// for backwards compatibility in systems that don't have them all.
 pub trait BackendApi: Clone + Send {
     /// Performs a Tableland read query.
-    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Value>;
+    fn read(&self, statement: &str, options: ReadOptions, gas_limit: u64) -> BackendResult<Value>;
 }
 
 /// A result type for calling into the backend. Such a call can cause
@@ -97,8 +95,6 @@ pub enum BackendError {
     BadArgument {},
     #[error("VM received invalid UTF-8 data from backend")]
     InvalidUtf8 {},
-    #[error("Iterator with ID {id} does not exist")]
-    IteratorDoesNotExist { id: u32 },
     #[error("Ran out of gas during call into backend")]
     OutOfGas {},
     #[error("Unknown error during call into backend: {msg}")]
@@ -117,10 +113,6 @@ impl BackendError {
         BackendError::BadArgument {}
     }
 
-    pub fn iterator_does_not_exist(iterator_id: u32) -> Self {
-        BackendError::IteratorDoesNotExist { id: iterator_id }
-    }
-
     pub fn out_of_gas() -> Self {
         BackendError::OutOfGas {}
     }
@@ -134,8 +126,8 @@ impl BackendError {
     }
 }
 
-impl From<FromUtf8Error> for BackendError {
-    fn from(_original: FromUtf8Error) -> Self {
+impl From<std::string::FromUtf8Error> for BackendError {
+    fn from(_original: std::string::FromUtf8Error) -> Self {
         BackendError::InvalidUtf8 {}
     }
 }
@@ -244,15 +236,6 @@ mod tests {
         let error = BackendError::bad_argument();
         match error {
             BackendError::BadArgument { .. } => {}
-            e => panic!("Unexpected error: {:?}", e),
-        }
-    }
-
-    #[test]
-    fn iterator_does_not_exist_works() {
-        let error = BackendError::iterator_does_not_exist(15);
-        match error {
-            BackendError::IteratorDoesNotExist { id, .. } => assert_eq!(id, 15),
             e => panic!("Unexpected error: {:?}", e),
         }
     }

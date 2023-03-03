@@ -1,6 +1,8 @@
-use serde_json::{from_slice, Value};
+use serde_json::Value;
+use tableland_client_types::ReadOptions;
 use tableland_std::Request;
 
+use crate::serde::from_slice;
 use crate::{Backend, BackendApi, BackendError, BackendResult, GasInfo};
 
 const RESPONSE: &[u8] = include_bytes!("../../testdata/response.json");
@@ -47,7 +49,7 @@ impl Default for MockApi {
 }
 
 impl BackendApi for MockApi {
-    fn read(&self, statement: &str, gas_limit: u64) -> BackendResult<Value> {
+    fn read(&self, statement: &str, _options: ReadOptions, gas_limit: u64) -> BackendResult<Value> {
         let mut gas_info = GasInfo::with_externally_used(
             GAS_COST_QUERY_FLAT + (GAS_COST_QUERY_REQUEST_MULTIPLIER * (statement.len() as u64)),
         );
@@ -55,7 +57,7 @@ impl BackendApi for MockApi {
             return (Err(BackendError::out_of_gas()), gas_info);
         }
 
-        let response = match from_slice(RESPONSE) {
+        let response = match from_slice(RESPONSE, 1024) {
             Ok(b) => b,
             Err(e) => return (Err(BackendError::UserErr { msg: e.to_string() }), gas_info),
         };
@@ -89,8 +91,12 @@ mod tests {
     fn read_works() {
         let api = MockApi::default();
 
-        api.read("select * from my_table", DEFAULT_QUERY_GAS_LIMIT)
-            .0
-            .unwrap();
+        api.read(
+            "select * from my_table",
+            ReadOptions::default(),
+            DEFAULT_QUERY_GAS_LIMIT,
+        )
+        .0
+        .unwrap();
     }
 }
