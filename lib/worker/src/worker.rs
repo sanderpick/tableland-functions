@@ -57,7 +57,6 @@ impl Worker {
                 match self.fn_cache.get_mut(cid.as_str()) {
                     Some(v) => v,
                     None => {
-                        println!("failed to get");
                         return (
                             Err(WorkerError::cache_err("failed to get runtime")),
                             GasReport::default(),
@@ -97,17 +96,16 @@ impl Worker {
     }
 
     async fn save(&self, cid: String, module: Vec<u8>) -> Result<bool, WorkerError> {
-        println!("creating vm");
         let instance = tokio::task::spawn_blocking(move || -> Instance<Api> {
             instance_with_options(module.as_slice(), ApiInstanceOptions::default())
         })
         .await?;
-        println!("created vm");
 
-        println!("insert cache");
-        match self.fn_cache.insert(cid, instance, 1).await {
-            true => Ok(true),
-            false => Err(WorkerError::cache_err("failed to cache runtime")),
+        if self.fn_cache.insert(cid, instance, 1).await {
+            self.fn_cache.wait().await.unwrap();
+            Ok(true)
+        } else {
+            return Err(WorkerError::cache_err("failed to cache runtime"));
         }
     }
 }
