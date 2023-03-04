@@ -1,13 +1,14 @@
 use bytes::Bytes;
-use http::{HeaderMap, Method, Uri};
+use http::{HeaderMap, HeaderValue, Method, StatusCode, Uri};
 use serde_bytes::ByteBuf;
 use tableland_std::Request;
+use tableland_vm::{GasReport, VmError};
 use warp::{http::Response as WarpResponse, path::FullPath, Rejection, Reply};
 
-use crate::worker::Worker;
+use crate::worker::{Worker, WorkerError};
 
 pub async fn add_runtime(worker: Worker, cid: String) -> Result<impl Reply, Rejection> {
-    worker.add_runtime(cid.clone()).await.map_err(|e| {
+    worker.add(cid.clone()).await.map_err(|e| {
         eprint!("error caching wasm runtime: {}", e);
         warp::reject::reject()
     })?;
@@ -45,24 +46,51 @@ pub async fn invoke_runtime(
 
     println!("fetch {} {} on worker {}", req.method(), path, cid);
 
-    let mut res = worker.run_runtime(cid.clone(), req).await.map_err(|e| {
-        eprint!("error calling function {}: {}", cid, e);
-        warp::reject::reject()
-    })?;
+    let out = worker.run(cid.clone(), req).await;
+    let report = out.1;
+    let mut res = match out.0 {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("error calling function {}: {}", cid, e);
+            return match e {
+                WorkerError::Vm(er) => match er {
+                    VmError::GasDepletion { .. } => Ok(build_response(
+                        StatusCode::PAYMENT_REQUIRED,
+                        HeaderMap::new(),
+                        report,
+                        Vec::new(),
+                    )),
+                    // todo handle other errors
+                    _ => Err(warp::reject::reject()),
+                },
+                // todo handle other errors
+                _ => Err(warp::reject::reject()),
+            };
+        }
+    };
 
-    let body = res.bytes().map_err(|e| {
-        eprint!("error parsing worker fetch result: {}", e);
-        warp::reject::reject()
-    })?;
+    Ok(build_response(
+        StatusCode::from_u16(res.status_code()).unwrap(),
+        res.headers().clone(),
+        report,
+        res.bytes().unwrap(),
+    ))
+}
 
-    let wres = WarpResponse::builder()
-        .status(res.status_code())
-        .body(body)
-        .unwrap();
+fn build_response(
+    status: StatusCode,
+    mut headers: HeaderMap,
+    report: GasReport,
+    body: Vec<u8>,
+) -> WarpResponse<Vec<u8>> {
+    let wres = WarpResponse::builder().status(status).body(body).unwrap();
     let (mut parts, body) = wres.into_parts();
-    parts.headers = res.headers().clone();
-    // parts
-    //     .headers
-    //     .append("x-gas-used", HeaderValue::from(gas_used));
-    Ok(WarpResponse::from_parts(parts, body))
+
+    headers.append("x-gas-limit", HeaderValue::from(report.limit));
+    headers.append("x-gas-remaining", HeaderValue::from(report.remaining));
+    headers.append("x-gas-external", HeaderValue::from(report.used_externally));
+    headers.append("x-gas-internal", HeaderValue::from(report.used_internally));
+    parts.headers = headers;
+
+    WarpResponse::from_parts(parts, body)
 }

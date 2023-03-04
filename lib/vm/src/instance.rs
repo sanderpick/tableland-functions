@@ -26,6 +26,17 @@ pub struct GasReport {
     pub used_internally: u64,
 }
 
+impl Default for GasReport {
+    fn default() -> Self {
+        GasReport {
+            limit: 0,
+            remaining: 0,
+            used_externally: 0,
+            used_internally: 0,
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug)]
 pub struct InstanceOptions {
     /// Gas limit measured in [CosmWasm gas](https://github.com/CosmWasm/cosmwasm/blob/main/docs/GAS.md).
