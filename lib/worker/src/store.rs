@@ -8,15 +8,15 @@ use crate::config::Config;
 use crate::instance::{instance_with_options, ApiInstanceOptions};
 
 #[derive(Clone)]
-pub struct Worker {
+pub struct Store {
     config: Config,
     http_client: Client,
     fn_cache: stretto::AsyncCache<String, Instance<Api>>,
 }
 
-impl Worker {
+impl Store {
     pub fn new(config: Config) -> Self {
-        Worker {
+        Store {
             config,
             http_client: Client::builder()
                 .timeout(std::time::Duration::new(5, 0))
@@ -26,7 +26,7 @@ impl Worker {
         }
     }
 
-    pub async fn add(&self, cid: String) -> Result<bool, WorkerError> {
+    pub async fn add(&self, cid: String) -> Result<bool, StoreError> {
         let module = self
             .http_client
             .get(format!("{}/{}", self.config.ipfs.gateway, cid))
@@ -47,7 +47,7 @@ impl Worker {
         &self,
         cid: String,
         req: Request,
-    ) -> (Result<Response, WorkerError>, GasReport) {
+    ) -> (Result<Response, StoreError>, GasReport) {
         let value = match self.fn_cache.get_mut(cid.as_str()) {
             Some(v) => v,
             None => {
@@ -58,7 +58,7 @@ impl Worker {
                     Some(v) => v,
                     None => {
                         return (
-                            Err(WorkerError::cache_err("failed to get runtime")),
+                            Err(StoreError::cache_err("failed to get runtime")),
                             GasReport::default(),
                         );
                     }
@@ -77,25 +77,25 @@ impl Worker {
         .await
         {
             Ok(v) => v,
-            Err(e) => return (Err(WorkerError::from(e)), GasReport::default()),
+            Err(e) => return (Err(StoreError::from(e)), GasReport::default()),
         };
         match vmr.0 {
             Ok(r) => match r {
                 FuncResult::Ok(r) => (Ok(r), vmr.1),
-                FuncResult::Err(s) => return (Err(WorkerError::func_err(s)), vmr.1),
+                FuncResult::Err(s) => return (Err(StoreError::func_err(s)), vmr.1),
             },
-            Err(e) => return (Err(WorkerError::from(e)), vmr.1),
+            Err(e) => return (Err(StoreError::from(e)), vmr.1),
         }
     }
 
-    async fn load(&self, cid: String) -> Result<bool, WorkerError> {
+    async fn load(&self, cid: String) -> Result<bool, StoreError> {
         let file_name = format!("{}/{}.wasm", self.config.cache.directory, cid);
         let module = tokio::fs::read(&file_name).await?;
 
         self.save(cid, module).await
     }
 
-    async fn save(&self, cid: String, module: Vec<u8>) -> Result<bool, WorkerError> {
+    async fn save(&self, cid: String, module: Vec<u8>) -> Result<bool, StoreError> {
         let instance = tokio::task::spawn_blocking(move || -> Instance<Api> {
             instance_with_options(module.as_slice(), ApiInstanceOptions::default())
         })
@@ -105,13 +105,13 @@ impl Worker {
             self.fn_cache.wait().await.unwrap();
             Ok(true)
         } else {
-            return Err(WorkerError::cache_err("failed to cache runtime"));
+            return Err(StoreError::cache_err("failed to cache runtime"));
         }
     }
 }
 
 #[derive(Error, Debug)]
-pub enum WorkerError {
+pub enum StoreError {
     #[error("VM error: {0}")]
     Vm(VmError),
     #[error("Function error: {0}")]
@@ -124,36 +124,36 @@ pub enum WorkerError {
     TaskJoin(String),
 }
 
-impl WorkerError {
+impl StoreError {
     pub fn func_err(msg: impl Into<String>) -> Self {
-        WorkerError::Func { 0: msg.into() }
+        StoreError::Func { 0: msg.into() }
     }
 
     pub fn cache_err(msg: impl Into<String>) -> Self {
-        WorkerError::Cache { 0: msg.into() }
+        StoreError::Cache { 0: msg.into() }
     }
 }
 
-impl From<std::io::Error> for WorkerError {
+impl From<std::io::Error> for StoreError {
     fn from(e: std::io::Error) -> Self {
-        WorkerError::cache_err(e.to_string())
+        StoreError::cache_err(e.to_string())
     }
 }
 
-impl From<reqwest::Error> for WorkerError {
+impl From<reqwest::Error> for StoreError {
     fn from(e: reqwest::Error) -> Self {
-        WorkerError::Ipfs(e.to_string())
+        StoreError::Ipfs(e.to_string())
     }
 }
 
-impl From<VmError> for WorkerError {
+impl From<VmError> for StoreError {
     fn from(e: VmError) -> Self {
-        WorkerError::Vm(e)
+        StoreError::Vm(e)
     }
 }
 
-impl From<tokio::task::JoinError> for WorkerError {
+impl From<tokio::task::JoinError> for StoreError {
     fn from(e: tokio::task::JoinError) -> Self {
-        WorkerError::TaskJoin(e.to_string())
+        StoreError::TaskJoin(e.to_string())
     }
 }

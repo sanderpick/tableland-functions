@@ -150,7 +150,7 @@ impl Response {
     }
 
     /// Access this response's body encoded as raw bytes.
-    pub fn bytes(&mut self) -> Result<Vec<u8>> {
+    pub fn bytess(&mut self) -> Result<Vec<u8>> {
         match &self.body {
             ResponseBody::Body(bytes) => Ok(bytes.clone().into_vec()),
             ResponseBody::Empty => Ok(Vec::new()),

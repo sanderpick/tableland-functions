@@ -10,10 +10,10 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
     // provide arbitrary data that will be accessible in each route via the `ctx.data()` method.
     let router = Router::new();
 
-    // Add as many routes as your Worker needs! Each route will get a `Request` for handling HTTP
+    // Add as many routes as your Function needs! Each route will get a `Request` for handling HTTP
     // functionality and a `RouteContext` which you can use to get route parameters.
     router
-        .get("/", |_, _, _| Response::ok("Hello from Workers!"))
+        .get("/", |_, _, _| Response::ok("Hello from Tableland!"))
         .get("/version", |_, _, _| Response::ok(VERSION))
         .get("/:type", |_, ctx, rctx| {
             if let Some(t) = rctx.param("type") {

@@ -1,4 +1,4 @@
-//! Router support for a Worker.
+//! Router support for a Function.
 //! This is a modified version of https://github.com/cloudflare/workers-rs/blob/main/worker/src/router.rs.
 use http::Method;
 use matchit::{Match, Node, Params};

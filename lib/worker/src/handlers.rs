@@ -1,35 +1,45 @@
 use bytes::Bytes;
-use http::{HeaderMap, HeaderValue, Method, StatusCode, Uri};
 use serde_bytes::ByteBuf;
 use tableland_std::Request;
 use tableland_vm::{GasReport, VmError};
-use warp::{http::Response as WarpResponse, path::FullPath, Rejection, Reply};
+use warp::{
+    http::Response as WarpResponse,
+    http::{HeaderMap, HeaderValue, Method, StatusCode, Uri},
+    path::FullPath,
+    Rejection, Reply,
+};
 
-use crate::worker::{Worker, WorkerError};
+use crate::store::{Store, StoreError};
 
-pub async fn add_runtime(worker: Worker, cid: String) -> Result<impl Reply, Rejection> {
-    worker.add(cid.clone()).await.map_err(|e| {
-        eprint!("error caching wasm runtime: {}", e);
+const MAX_BODY_LENGTH: usize = 1024 * 1024;
+
+pub async fn add_runtime(cid: String, store: Store) -> Result<impl Reply, Rejection> {
+    store.add(cid.clone()).await.map_err(|e| {
+        eprint!("error saving {}: {}", cid, e);
         warp::reject::reject()
     })?;
 
-    println!("added new wasm runtime: {}", cid);
+    println!("added {}", cid);
 
     Ok("success")
 }
 
 pub async fn invoke_runtime(
-    worker: Worker,
+    cid: String,
+    store: Store,
     method: Method,
     full_path: FullPath,
-    cid: String,
     query: String,
     headers: HeaderMap,
     body: Bytes,
 ) -> Result<impl Reply, Rejection> {
+    if !body_allowed(method.clone(), body.len()) {
+        return Err(warp::reject::reject());
+    }
+
     let mut path = full_path
         .as_str()
-        .trim_start_matches(format!("/workers/{}", cid).as_str())
+        .trim_start_matches(format!("/v1/functions/{}", cid).as_str())
         .to_string();
     if query.len() > 0 {
         path = format!("{}?{}", path, query);
@@ -44,16 +54,16 @@ pub async fn invoke_runtime(
     };
     let req = Request::new(uri, method, headers, bbody);
 
-    println!("fetch {} {} on worker {}", req.method(), path, cid);
+    println!("{} {}{}", req.method(), cid, path);
 
-    let out = worker.run(cid.clone(), req).await;
+    let out = store.run(cid.clone(), req).await;
     let report = out.1;
     let mut res = match out.0 {
         Ok(r) => r,
         Err(e) => {
-            eprintln!("error calling function {}: {}", cid, e);
+            eprintln!("error fetching {}: {}", cid, e);
             return match e {
-                WorkerError::Vm(er) => match er {
+                StoreError::Vm(er) => match er {
                     VmError::GasDepletion { .. } => Ok(build_response(
                         StatusCode::PAYMENT_REQUIRED,
                         HeaderMap::new(),
@@ -73,8 +83,17 @@ pub async fn invoke_runtime(
         StatusCode::from_u16(res.status_code()).unwrap(),
         res.headers().clone(),
         report,
-        res.bytes().unwrap(),
+        res.bytess().unwrap(),
     ))
+}
+
+fn body_allowed(method: Method, body_length: usize) -> bool {
+    return match method {
+        Method::GET | Method::DELETE | Method::TRACE | Method::OPTIONS | Method::HEAD => {
+            body_length == 0
+        }
+        _ => body_length <= MAX_BODY_LENGTH,
+    };
 }
 
 fn build_response(

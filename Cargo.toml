@@ -13,10 +13,10 @@ members = [
 
 [workspace.package]
 authors = ["Textile <contact@textile.io"]
-description = "A Rust SDK and runtime for Tableland Workers."
+description = "A Rust SDK and runtime for Tableland Functions."
 edition = "2021"
-homepage = "https://github.com/sanderpick/tableland-worker/"
+homepage = "https://github.com/sanderpick/tableland-functions/"
 license = "MIT OR Apache-2.0"
 readme = "./README.md"
-repository = "https://github.com/sanderpick/tableland-worker/"
+repository = "https://github.com/sanderpick/tableland-functions/"
 version = "0.1.0"
