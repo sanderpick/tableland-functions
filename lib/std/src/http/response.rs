@@ -43,7 +43,7 @@ impl Response {
                 status_code: 200,
             });
         }
-        Err(Error::internal_err("Failed to encode data to json"))
+        Err(Error::bad_encoding("Failed to encode data to json"))
     }
 
     /// Create a `Response` using the body encoded as HTML. Sets the associated `Content-Type`
@@ -132,8 +132,7 @@ impl Response {
     /// Access this response's body as plaintext.
     pub fn text(&mut self) -> Result<String> {
         match &self.body {
-            ResponseBody::Body(bytes) => Ok(String::from_utf8(bytes.clone().into_vec())
-                .map_err(|e| Error::from(e.to_string()))?),
+            ResponseBody::Body(bytes) => Ok(String::from_utf8(bytes.clone().into_vec())?),
             ResponseBody::Empty => Ok(String::new()),
         }
     }
@@ -147,7 +146,7 @@ impl Response {
         if content_type.ne(&HeaderValue::from_str("application/json").unwrap()) {
             return Err(Error::bad_encoding("invalid content-type header"));
         }
-        serde_json::from_str(&self.text()?).map_err(Error::from)
+        serde_json::from_str(&self.text()?)?
     }
 
     /// Access this response's body encoded as raw bytes.

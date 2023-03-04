@@ -1,8 +1,7 @@
 use serde_json::{from_slice, to_vec, Value};
-use std::any::type_name;
 use tableland_client_types::ReadOptions;
 
-use crate::http::{Error, Result};
+use crate::http::Result;
 use crate::memory::{build_region, consume_region, Region};
 use crate::tableland::ReadRequest;
 use crate::traits::Api;
@@ -44,7 +43,7 @@ impl Api for ExternalApi {
         let res_ptr = unsafe { read(src_ptr) };
         let res = unsafe { consume_region(res_ptr as *mut Region) };
 
-        let data = from_slice(&res).map_err(|e| Error::parse_err(type_name::<Value>(), e))?;
+        let data = from_slice(&res)?;
         Ok(data)
     }
 

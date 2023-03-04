@@ -7,8 +7,8 @@ pub enum Error {
     InternalErr { msg: String },
     #[error("Bad encoding: {msg}")]
     BadEncoding { msg: String },
-    #[error("Error parsing into type {target_type}: {msg}")]
-    ParseErr { target_type: String, msg: String },
+    #[error("Error parsing into type: {msg}")]
+    ParseErr { msg: String },
 }
 
 impl Error {
@@ -20,22 +20,21 @@ impl Error {
         Error::BadEncoding { msg: msg.into() }
     }
 
-    pub fn parse_err(target: impl Into<String>, msg: impl ToString) -> Self {
+    pub fn parse_err(msg: impl ToString) -> Self {
         Error::ParseErr {
-            target_type: target.into(),
             msg: msg.to_string(),
         }
     }
 }
 
-impl From<std::string::String> for Error {
-    fn from(s: String) -> Self {
-        Error::internal_err(s)
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Error::parse_err(e.to_string())
     }
 }
 
-impl From<serde_json::Error> for Error {
-    fn from(e: serde_json::Error) -> Self {
-        Error::internal_err(e.to_string())
+impl From<std::string::FromUtf8Error> for Error {
+    fn from(e: std::string::FromUtf8Error) -> Self {
+        Error::bad_encoding(e.to_string())
     }
 }

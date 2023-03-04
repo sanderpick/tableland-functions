@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet};
 use std::ptr::NonNull;
 use std::sync::Mutex;
-
 use wasmer::{Exports, Function, ImportObject, Instance as WasmerInstance, Module, Val};
 
 use crate::backend::{Backend, BackendApi};
@@ -34,6 +33,7 @@ pub struct InstanceOptions {
     pub print_debug: bool,
 }
 
+#[derive(Clone)]
 pub struct Instance<A: BackendApi> {
     /// We put this instance in a box to maintain a constant memory address for the entire
     /// lifetime of the instance in the cache. This is needed e.g. when linking the wasmer

@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-
 use tableland_vm::{capabilities_from_csv, check_wasm, Backend, Instance, InstanceOptions, Size};
 
 use crate::backend::Api;
@@ -7,18 +6,6 @@ use crate::backend::Api;
 const DEFAULT_GAS_LIMIT: u64 = 500_000_000_000; // ~0.5ms
 const DEFAULT_MEMORY_LIMIT: Option<Size> = Some(Size::mebi(16));
 const DEFAULT_PRINT_DEBUG: bool = true;
-
-/// Creates an instance from the given Wasm bytecode.
-/// The gas limit is measured in [CosmWasm gas](https://github.com/CosmWasm/cosmwasm/blob/main/docs/GAS.md).
-pub fn instance_with_gas_limit(wasm: &[u8], gas_limit: u64) -> Instance<Api> {
-    instance_with_options(
-        wasm,
-        ApiInstanceOptions {
-            gas_limit,
-            ..Default::default()
-        },
-    )
-}
 
 #[derive(Debug)]
 pub struct ApiInstanceOptions {
@@ -47,6 +34,19 @@ impl Default for ApiInstanceOptions {
             memory_limit: DEFAULT_MEMORY_LIMIT,
         }
     }
+}
+
+/// Creates an instance from the given Wasm bytecode.
+/// The gas limit is measured in [CosmWasm gas](https://github.com/CosmWasm/cosmwasm/blob/main/docs/GAS.md).
+#[allow(dead_code)]
+pub fn instance_with_gas_limit(wasm: &[u8], gas_limit: u64) -> Instance<Api> {
+    instance_with_options(
+        wasm,
+        ApiInstanceOptions {
+            gas_limit,
+            ..Default::default()
+        },
+    )
 }
 
 pub fn instance_with_options(wasm: &[u8], options: ApiInstanceOptions) -> Instance<Api> {
