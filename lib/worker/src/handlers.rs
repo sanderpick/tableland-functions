@@ -83,7 +83,7 @@ pub async fn invoke_runtime(
         StatusCode::from_u16(res.status_code()).unwrap(),
         res.headers().clone(),
         report,
-        res.bytess().unwrap(),
+        res.bytes().unwrap(),
     ))
 }
 

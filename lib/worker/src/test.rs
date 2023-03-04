@@ -6,7 +6,7 @@ use crate::backend::Api;
 use crate::instance::instance_with_gas_limit;
 
 const WASM: &[u8] =
-    include_bytes!("../../../examples/demo/target/wasm32-unknown-unknown/release/demo.wasm");
+    include_bytes!("../../../examples/json/target/wasm32-unknown-unknown/release/json.wasm");
 
 fn create_function() -> Instance<Api> {
     let gas_limit = 1_000_000_000_000; // ~1ms, enough for many executions within one instance
@@ -22,7 +22,7 @@ fn call_fetch_works() {
     assert_eq!(res.status_code(), 200);
 
     let json = res.json::<Value>().unwrap();
-    println!("{}", to_string(&json).unwrap());
+    println!("{}", json);
 
     let report = instance.create_gas_report();
     println!("{:?}", report);

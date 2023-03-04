@@ -1,6 +1,7 @@
 use http::header::{HeaderMap, HeaderValue};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use serde_bytes::ByteBuf;
+use serde_json::Value;
 
 use super::{Error, Result};
 
@@ -137,6 +138,13 @@ impl Response {
         }
     }
 
+    pub fn json2(&mut self) -> Result<Value> {
+        match &self.body {
+            ResponseBody::Body(bytes) => Ok(serde_json::from_slice(bytes.clone().as_ref())?),
+            ResponseBody::Empty => Ok(Value::from("")),
+        }
+    }
+
     /// Access this response's body encoded as JSON.
     pub fn json<B: DeserializeOwned>(&mut self) -> Result<B> {
         let content_type = self
@@ -146,11 +154,14 @@ impl Response {
         if content_type.ne(&HeaderValue::from_str("application/json").unwrap()) {
             return Err(Error::bad_encoding("invalid content-type header"));
         }
-        serde_json::from_str(&self.text()?)?
+        match &self.body {
+            ResponseBody::Body(bytes) => Ok(serde_json::from_slice(bytes.clone().as_ref())?),
+            ResponseBody::Empty => Ok(serde_json::from_slice(Vec::new().as_slice())?),
+        }
     }
 
     /// Access this response's body encoded as raw bytes.
-    pub fn bytess(&mut self) -> Result<Vec<u8>> {
+    pub fn bytes(&mut self) -> Result<Vec<u8>> {
         match &self.body {
             ResponseBody::Body(bytes) => Ok(bytes.clone().into_vec()),
             ResponseBody::Empty => Ok(Vec::new()),

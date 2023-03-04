@@ -1,6 +1,7 @@
 [workspace]
 exclude = [
-    "examples/demo",
+    "examples/json",
+    "examples/html",
 ]
 members = [
     "lib/client",

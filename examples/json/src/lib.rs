@@ -31,7 +31,7 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::{to_string, Value};
+    use serde_json::Value;
     use tableland_std::testing::{mock_dependencies, mock_get_request};
 
     #[test]
@@ -41,6 +41,6 @@ mod tests {
         assert_eq!(res.status_code(), 200);
 
         let json = res.json::<Value>().unwrap();
-        println!("{}", to_string(&json).unwrap());
+        println!("{}", json);
     }
 }
