@@ -1,24 +1,23 @@
 [workspace]
 exclude = [
-    "examples/ssr",
-    "examples/json_api",
+    "examples/json",
+    "examples/html",
 ]
 members = [
-    "tableland_client",
-    "tableland_client/client_types",
-    "tableland_worker_protocol",
-    "tableland_worker_protocol/generator",
-    "tableland_worker_protocol/bindings/rust-plugin",
-    "tableland_worker_runtime",
-    "tableland_worker_utils",
+    "lib/client",
+    "lib/client/types",
+    "lib/derive",
+    "lib/std",
+    "lib/vm",
+    "lib/worker",
 ]
 
 [workspace.package]
 authors = ["Textile <contact@textile.io"]
-description = "A Rust SDK and runtime for Tableland Workers."
+description = "A Rust SDK and runtime for Tableland Functions."
 edition = "2021"
-homepage = "https://github.com/sanderpick/tableland-worker/"
+homepage = "https://github.com/sanderpick/tableland-functions/"
 license = "MIT OR Apache-2.0"
 readme = "./README.md"
-repository = "https://github.com/sanderpick/tableland-worker/"
+repository = "https://github.com/sanderpick/tableland-functions/"
 version = "0.1.0"

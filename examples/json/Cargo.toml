@@ -1,0 +1,33 @@
+[package]
+authors = ["Textile <contact@textile.io>"]
+edition = "2021"
+name = "json"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 's'
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+panic = 'abort'
+incremental = false
+overflow-checks = true
+strip = true
+
+[features]
+default = []
+# For quicker tests, cargo test --lib. for more explicit tests, cargo test --features=backtraces
+backtraces = ["tableland_std/backtraces", "tableland_vm/backtraces"]
+
+[dependencies]
+tableland_client_types = { path="../../lib/client/types" }
+tableland_std = { path = "../../lib/std" }
+
+[dev-dependencies]
+serde_json = "1.0.93"
+tableland_vm = { path = "../../lib/vm" }

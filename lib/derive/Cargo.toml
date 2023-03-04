@@ -1,0 +1,19 @@
+[package]
+authors = { workspace = true }
+description = { workspace = true }
+edition = { workspace = true }
+name = "tableland_derive"
+homepage = { workspace = true }
+license = { workspace = true }
+readme = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
+
+[lib]
+proc-macro = true
+
+[features]
+default = []
+
+[dependencies]
+syn = { version = "1.0.109", features = ["full"] }
