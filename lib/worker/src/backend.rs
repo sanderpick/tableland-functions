@@ -1,5 +1,5 @@
 use serde_json::Value;
-use tableland_client::{chains::ChainID, TablelandClient};
+use tableland_client::Tableland;
 use tableland_client_types::ReadOptions;
 use tableland_vm::{BackendApi, BackendError, BackendResult, GasInfo};
 
@@ -11,18 +11,17 @@ const GAS_COST_QUERY_REQUEST_MULTIPLIER: u64 = 0;
 const GAS_COST_QUERY_RESPONSE_MULTIPLIER: u64 = 100;
 
 #[derive(Clone)]
-pub struct Api {
-    client: TablelandClient,
+pub struct Api<T: Tableland> {
+    client: T,
 }
 
-impl Api {
-    pub(crate) fn new() -> Self {
-        let client = TablelandClient::new(ChainID::Local);
+impl<T: Tableland> Api<T> {
+    pub(crate) fn new(client: T) -> Self {
         Api { client }
     }
 }
 
-impl BackendApi for Api {
+impl<T: Tableland> BackendApi for Api<T> {
     fn read(&self, statement: &str, options: ReadOptions, gas_limit: u64) -> BackendResult<Value> {
         let mut gas_info = GasInfo::with_externally_used(
             GAS_COST_QUERY_FLAT + (GAS_COST_QUERY_REQUEST_MULTIPLIER * (statement.len() as u64)),
@@ -48,12 +47,15 @@ impl BackendApi for Api {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tableland_client::{testing::MockClient, ChainID};
 
     const DEFAULT_QUERY_GAS_LIMIT: u64 = 300_000;
 
     #[test]
     fn read_works() {
-        let api = Api::new();
+        let mut client = MockClient::new(ChainID::Local);
+        client.respond_with(b"[{}]".to_vec());
+        let api = Api::new(client);
         api.read(
             "select * from my_table",
             ReadOptions::default(),

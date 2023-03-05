@@ -1,4 +1,5 @@
 use reqwest::Client;
+use tableland_client::{Tableland, TablelandClient};
 use tableland_std::{FuncResult, Request, Response};
 use tableland_vm::{call_fetch, GasReport, Instance, VmError, VmResult};
 use thiserror::Error;
@@ -11,7 +12,7 @@ use crate::instance::{instance_with_options, ApiInstanceOptions};
 pub struct Store {
     config: Config,
     http_client: Client,
-    fn_cache: stretto::AsyncCache<String, Instance<Api>>,
+    fn_cache: stretto::AsyncCache<String, Instance<Api<TablelandClient>>>,
 }
 
 impl Store {
@@ -96,8 +97,13 @@ impl Store {
     }
 
     async fn save(&self, cid: String, module: Vec<u8>) -> Result<bool, StoreError> {
-        let instance = tokio::task::spawn_blocking(move || -> Instance<Api> {
-            instance_with_options(module.as_slice(), ApiInstanceOptions::default())
+        let chain_id = self.config.clone().chain.id;
+        let instance = tokio::task::spawn_blocking(move || -> Instance<Api<TablelandClient>> {
+            instance_with_options(
+                module.as_slice(),
+                ApiInstanceOptions::default(),
+                TablelandClient::new(chain_id),
+            )
         })
         .await?;
 

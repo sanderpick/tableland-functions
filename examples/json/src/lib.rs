@@ -18,7 +18,7 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
         .get("/:type", |_, ctx, rctx| {
             if let Some(t) = rctx.param("type") {
                 let data = ctx.tableland.read(
-                    format!("select * from pets_31337_4 where type = '{}'", t).as_str(),
+                    format!("select * from pets_31337_4 as pets join homes_31337_2 as homes on pets.owner_name = homes.owner_name where type = '{}'", t).as_str(),
                     ReadOptions::default(),
                 )?;
                 return Response::from_json(&data);
@@ -34,9 +34,11 @@ mod tests {
     use serde_json::Value;
     use tableland_std::testing::{mock_dependencies, mock_get_request};
 
+    const MOCK_QUERY_RESPONSE: &[u8] = include_bytes!("../testdata/response.json");
+
     #[test]
     fn call_fetch_works() {
-        let mut ctx = mock_dependencies();
+        let mut ctx = mock_dependencies(MOCK_QUERY_RESPONSE.to_vec());
         let mut res = fetch(mock_get_request("/dog"), ctx.as_mut()).unwrap();
         assert_eq!(res.status_code(), 200);
 

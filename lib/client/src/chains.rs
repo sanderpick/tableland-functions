@@ -1,8 +1,10 @@
+use serde::{Deserialize, Serialize};
+
 const MAINNET_URL: &str = "https://tableland.network";
 const TESTNET_URL: &str = "https://testnets.tableland.network";
 const LOCAL_URL: &str = "http://localhost:8080";
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum ChainID {
     Ethereum = 1,

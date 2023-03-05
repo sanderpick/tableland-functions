@@ -175,11 +175,7 @@ mod tests {
     use super::*;
     use crate::errors::VmError;
 
-    static CONTRACT_0_7: &[u8] = include_bytes!("../testdata/hackatom_0.7.wasm");
-    static CONTRACT_0_12: &[u8] = include_bytes!("../testdata/hackatom_0.12.wasm");
-    static CONTRACT_0_14: &[u8] = include_bytes!("../testdata/hackatom_0.14.wasm");
-    static CONTRACT_0_15: &[u8] = include_bytes!("../testdata/hackatom_0.15.wasm");
-    static CONTRACT: &[u8] = include_bytes!("../testdata/hackatom.wasm");
+    static CONTRACT: &[u8] = include_bytes!("../testdata/json.wasm");
 
     fn default_capabilities() -> HashSet<String> {
         ["staking".to_string()].into_iter().collect()
@@ -189,45 +185,6 @@ mod tests {
     fn check_wasm_passes_for_latest_contract() {
         // this is our reference check, must pass
         check_wasm(CONTRACT, &default_capabilities()).unwrap();
-    }
-
-    #[test]
-    fn check_wasm_old_contract() {
-        match check_wasm(CONTRACT_0_15, &default_capabilities()) {
-            Err(VmError::StaticValidationErr { msg, .. }) => assert_eq!(
-                msg,
-                "Wasm contract has unknown interface_version_* marker export"
-            ),
-            Err(e) => panic!("Unexpected error {:?}", e),
-            Ok(_) => panic!("This must not succeeed"),
-        };
-
-        match check_wasm(CONTRACT_0_14, &default_capabilities()) {
-            Err(VmError::StaticValidationErr { msg, .. }) => assert_eq!(
-                msg,
-                "Wasm contract has unknown interface_version_* marker export"
-            ),
-            Err(e) => panic!("Unexpected error {:?}", e),
-            Ok(_) => panic!("This must not succeeed"),
-        };
-
-        match check_wasm(CONTRACT_0_12, &default_capabilities()) {
-            Err(VmError::StaticValidationErr { msg, .. }) => assert_eq!(
-                msg,
-                "Wasm contract missing a required marker export: interface_version_*"
-            ),
-            Err(e) => panic!("Unexpected error {:?}", e),
-            Ok(_) => panic!("This must not succeeed"),
-        };
-
-        match check_wasm(CONTRACT_0_7, &default_capabilities()) {
-            Err(VmError::StaticValidationErr { msg, .. }) => assert_eq!(
-                msg,
-                "Wasm contract missing a required marker export: interface_version_*"
-            ),
-            Err(e) => panic!("Unexpected error {:?}", e),
-            Ok(_) => panic!("This must not succeeed"),
-        };
     }
 
     #[test]
@@ -331,7 +288,7 @@ mod tests {
                 (export "allocate" (func 0))
                 (export "interface_version_8" (func 0))
                 (export "deallocate" (func 0))
-                (export "instantiate" (func 0))
+                (export "fetch" (func 0))
             )"#,
         )
         .unwrap();
@@ -349,7 +306,7 @@ mod tests {
                     (export "allocate" (func 0))
                     (export "interface_version_7" (func 0))
                     (export "deallocate" (func 0))
-                    (export "instantiate" (func 0))
+                    (export "fetch" (func 0))
                 )"#,
             )
             .unwrap();
@@ -365,7 +322,7 @@ mod tests {
                 (export "add_one" (func 0))
                 (export "allocate" (func 0))
                 (export "deallocate" (func 0))
-                (export "instantiate" (func 0))
+                (export "fetch" (func 0))
             )"#,
         )
         .unwrap();
@@ -390,7 +347,7 @@ mod tests {
                 (export "interface_version_8" (func 0))
                 (export "interface_version_9" (func 0))
                 (export "deallocate" (func 0))
-                (export "instantiate" (func 0))
+                (export "fetch" (func 0))
             )"#,
         )
         .unwrap();
@@ -414,7 +371,7 @@ mod tests {
                 (export "allocate" (func 0))
                 (export "interface_version_6" (func 0))
                 (export "deallocate" (func 0))
-                (export "instantiate" (func 0))
+                (export "fetch" (func 0))
             )"#,
         )
         .unwrap();
@@ -438,7 +395,7 @@ mod tests {
                 (export "allocate" (func 0))
                 (export "interface_version_broken" (func 0))
                 (export "deallocate" (func 0))
-                (export "instantiate" (func 0))
+                (export "fetch" (func 0))
             )"#,
         )
         .unwrap();
@@ -464,7 +421,7 @@ mod tests {
                 (export "add_one" (func 0))
                 (export "allocate" (func 0))
                 (export "deallocate" (func 0))
-                (export "instantiate" (func 0))
+                (export "fetch" (func 0))
             )"#,
         )
         .unwrap();
@@ -512,33 +469,10 @@ mod tests {
     }
 
     #[test]
-    fn check_wasm_exports_of_old_contract() {
-        let module = deserialize_wasm(CONTRACT_0_7).unwrap();
-        match check_wasm_exports(&module) {
-            Err(VmError::StaticValidationErr { msg, .. }) => {
-                assert!(
-                    msg.starts_with("Wasm contract doesn't have required export: \"instantiate\"")
-                )
-            }
-            Err(e) => panic!("Unexpected error {:?}", e),
-            Ok(_) => panic!("Didn't reject wasm with invalid api"),
-        }
-    }
-
-    #[test]
     fn check_wasm_imports_ok() {
         let wasm = wat::parse_str(
             r#"(module
-            (import "env" "db_read" (func (param i32 i32) (result i32)))
-            (import "env" "db_write" (func (param i32 i32) (result i32)))
-            (import "env" "db_remove" (func (param i32) (result i32)))
-            (import "env" "addr_validate" (func (param i32) (result i32)))
-            (import "env" "addr_canonicalize" (func (param i32 i32) (result i32)))
-            (import "env" "addr_humanize" (func (param i32 i32) (result i32)))
-            (import "env" "secp256k1_verify" (func (param i32 i32 i32) (result i32)))
-            (import "env" "secp256k1_recover_pubkey" (func (param i32 i32 i32) (result i64)))
-            (import "env" "ed25519_verify" (func (param i32 i32 i32) (result i32)))
-            (import "env" "ed25519_batch_verify" (func (param i32 i32 i32) (result i32)))
+            (import "env" "read" (func (param i32) (result i32)))
         )"#,
         )
         .unwrap();
@@ -564,36 +498,14 @@ mod tests {
         )"#,
         )
         .unwrap();
-        let supported_imports: &[&str] = &[
-            "env.db_read",
-            "env.db_write",
-            "env.db_remove",
-            "env.addr_canonicalize",
-            "env.addr_humanize",
-            "env.debug",
-            "env.query_chain",
-        ];
+        let supported_imports: &[&str] = &["env.read", "env.debug"];
         let result = check_wasm_imports(&deserialize_wasm(&wasm).unwrap(), supported_imports);
         match result.unwrap_err() {
             VmError::StaticValidationErr { msg, .. } => {
                 println!("{}", msg);
                 assert_eq!(
                     msg,
-                    r#"Wasm contract requires unsupported import: "env.foo". Required imports: {"env.bar", "env.foo", "env.spammyspam01", "env.spammyspam02", "env.spammyspam03", "env.spammyspam04", "env.spammyspam05", "env.spammyspam06", "env.spammyspam07", "env.spammyspam08", ... 2 more}. Available imports: ["env.db_read", "env.db_write", "env.db_remove", "env.addr_canonicalize", "env.addr_humanize", "env.debug", "env.query_chain"]."#
-                );
-            }
-            err => panic!("Unexpected error: {:?}", err),
-        }
-    }
-
-    #[test]
-    fn check_wasm_imports_of_old_contract() {
-        let module = deserialize_wasm(CONTRACT_0_7).unwrap();
-        let result = check_wasm_imports(&module, SUPPORTED_IMPORTS);
-        match result.unwrap_err() {
-            VmError::StaticValidationErr { msg, .. } => {
-                assert!(
-                    msg.starts_with("Wasm contract requires unsupported import: \"env.read_db\"")
+                    r#"Wasm contract requires unsupported import: "env.foo". Required imports: {"env.bar", "env.foo", "env.spammyspam01", "env.spammyspam02", "env.spammyspam03", "env.spammyspam04", "env.spammyspam05", "env.spammyspam06", "env.spammyspam07", "env.spammyspam08", ... 2 more}. Available imports: ["env.read", "env.debug"]."#
                 );
             }
             err => panic!("Unexpected error: {:?}", err),
@@ -602,13 +514,11 @@ mod tests {
 
     #[test]
     fn check_wasm_imports_wrong_type() {
-        let wasm = wat::parse_str(r#"(module (import "env" "db_read" (memory 1 1)))"#).unwrap();
+        let wasm = wat::parse_str(r#"(module (import "env" "read" (memory 1 1)))"#).unwrap();
         let result = check_wasm_imports(&deserialize_wasm(&wasm).unwrap(), SUPPORTED_IMPORTS);
         match result.unwrap_err() {
             VmError::StaticValidationErr { msg, .. } => {
-                assert!(
-                    msg.starts_with("Wasm contract requires non-function import: \"env.db_read\"")
-                );
+                assert!(msg.starts_with("Wasm contract requires non-function import: \"env.read\""));
             }
             err => panic!("Unexpected error: {:?}", err),
         }

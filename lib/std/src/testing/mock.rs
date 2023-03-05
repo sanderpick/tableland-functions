@@ -5,27 +5,33 @@ use crate::ctx::OwnedCtx;
 use crate::http::{Request, Result};
 use crate::traits::Api;
 
-const RESPONSE: &[u8] = include_bytes!("../../testdata/response.json");
-
 /// Creates all external requirements that can be injected for unit tests.
-pub fn mock_dependencies() -> OwnedCtx<MockApi> {
+pub fn mock_dependencies(data: Vec<u8>) -> OwnedCtx<MockApi> {
     OwnedCtx {
-        tableland: MockApi::default(),
+        tableland: MockApi::new(data),
     }
 }
 
-#[derive(Copy, Clone)]
-pub struct MockApi {}
+#[derive(Clone)]
+pub struct MockApi {
+    data: Vec<u8>,
+}
 
 impl Default for MockApi {
     fn default() -> Self {
-        MockApi {}
+        MockApi { data: Vec::new() }
+    }
+}
+
+impl MockApi {
+    fn new(data: Vec<u8>) -> Self {
+        MockApi { data }
     }
 }
 
 impl Api for MockApi {
     fn read(&self, _statement: &str, _options: ReadOptions) -> Result<Value> {
-        Ok(from_slice(RESPONSE).unwrap())
+        Ok(from_slice(self.data.as_slice()).unwrap())
     }
 
     fn debug(&self, message: &str) {
@@ -48,8 +54,10 @@ mod tests {
 
     #[test]
     fn read_works() {
-        let api = MockApi::default();
-        let json = api.read("select * from my_table;").unwrap();
+        let api = MockApi::new(b"[]".to_vec());
+        let json = api
+            .read("select * from my_table;", ReadOptions::default())
+            .unwrap();
         println!("{}", serde_json::to_string(&json).unwrap());
     }
 }

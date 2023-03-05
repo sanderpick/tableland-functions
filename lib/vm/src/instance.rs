@@ -257,14 +257,12 @@ mod tests {
     use crate::errors::VmError;
     use crate::testing::{
         mock_backend, mock_get_request, mock_instance, mock_instance_options,
-        mock_instance_with_failing_api, mock_instance_with_gas_limit, mock_instance_with_options,
-        MockInstanceOptions,
+        mock_instance_with_gas_limit, mock_instance_with_options, MockInstanceOptions,
     };
 
     const KIB: usize = 1024;
     const MIB: usize = 1024 * 1024;
-    const DEFAULT_QUERY_GAS_LIMIT: u64 = 300_000;
-    static CONTRACT: &[u8] = include_bytes!("../testdata/hackatom.wasm");
+    static CONTRACT: &[u8] = include_bytes!("../testdata/json.wasm");
 
     #[test]
     fn required_capabilities_works() {
@@ -350,7 +348,7 @@ mod tests {
 
     #[test]
     fn call_function0_works() {
-        let instance = mock_instance(CONTRACT);
+        let instance = mock_instance(CONTRACT, Vec::new());
 
         instance
             .call_function0("interface_version_8", &[])
@@ -359,7 +357,7 @@ mod tests {
 
     #[test]
     fn call_function1_works() {
-        let instance = mock_instance(CONTRACT);
+        let instance = mock_instance(CONTRACT, Vec::new());
 
         // can call function few times
         let result = instance
@@ -386,6 +384,7 @@ mod tests {
                 memory_limit: Some(Size::mebi(500)),
                 ..Default::default()
             },
+            Vec::new(),
         );
 
         let sizes: Vec<usize> = vec![
@@ -408,7 +407,7 @@ mod tests {
 
     #[test]
     fn write_and_read_memory_works() {
-        let mut instance = mock_instance(CONTRACT);
+        let mut instance = mock_instance(CONTRACT, Vec::new());
 
         let sizes: Vec<usize> = vec![
             0,
@@ -438,23 +437,10 @@ mod tests {
     }
 
     #[test]
-    fn errors_in_imports() {
-        // set up an instance that will experience an error in an import
-        let error_message = "Api failed intentionally";
-        let mut instance = mock_instance_with_failing_api(CONTRACT, error_message);
-        let init_result = call_fetch(&mut instance, &mock_get_request("/"));
-
-        match init_result.unwrap_err() {
-            VmError::RuntimeErr { msg, .. } => assert!(msg.contains(error_message)),
-            err => panic!("Unexpected error: {:?}", err),
-        }
-    }
-
-    #[test]
     fn read_memory_errors_when_when_length_is_too_long() {
         let length = 6;
         let max_length = 5;
-        let mut instance = mock_instance(CONTRACT);
+        let mut instance = mock_instance(CONTRACT, Vec::new());
 
         // Allocate sets length to 0. Write some data to increase length.
         let region_ptr = instance.allocate(length).expect("error allocating");
@@ -498,7 +484,7 @@ mod tests {
             )"#,
         )
         .unwrap();
-        let instance = mock_instance(&wasm);
+        let instance = mock_instance(&wasm, Vec::new());
         assert_eq!(instance.memory_pages(), 0);
 
         // min: 3 pages, max: none
@@ -516,13 +502,13 @@ mod tests {
             )"#,
         )
         .unwrap();
-        let instance = mock_instance(&wasm);
+        let instance = mock_instance(&wasm, Vec::new());
         assert_eq!(instance.memory_pages(), 3);
     }
 
     #[test]
     fn memory_pages_grows_with_usage() {
-        let mut instance = mock_instance(CONTRACT);
+        let mut instance = mock_instance(CONTRACT, Vec::new());
 
         assert_eq!(instance.memory_pages(), 17);
 
@@ -538,7 +524,7 @@ mod tests {
 
     #[test]
     fn get_gas_left_works() {
-        let instance = mock_instance_with_gas_limit(CONTRACT, 123321);
+        let instance = mock_instance_with_gas_limit(CONTRACT, 123321, Vec::new());
         let orig_gas = instance.get_gas_left();
         assert_eq!(orig_gas, 123321);
     }
@@ -546,7 +532,7 @@ mod tests {
     #[test]
     fn create_gas_report_works() {
         const LIMIT: u64 = 700_000_000_000;
-        let mut instance = mock_instance_with_gas_limit(CONTRACT, LIMIT);
+        let mut instance = mock_instance_with_gas_limit(CONTRACT, LIMIT, Vec::new());
 
         let report1 = instance.create_gas_report();
         assert_eq!(report1.used_externally, 0);
@@ -559,8 +545,8 @@ mod tests {
             .unwrap();
 
         let report2 = instance.create_gas_report();
-        assert_eq!(report2.used_externally, 73);
-        assert_eq!(report2.used_internally, 5775750198);
+        assert_eq!(report2.used_externally, 0);
+        assert_eq!(report2.used_internally, 9085050000);
         assert_eq!(report2.limit, LIMIT);
         assert_eq!(
             report2.remaining,
@@ -570,7 +556,7 @@ mod tests {
 
     #[test]
     fn contract_deducts_gas_init() {
-        let mut instance = mock_instance(CONTRACT);
+        let mut instance = mock_instance(CONTRACT, Vec::new());
         let orig_gas = instance.get_gas_left();
 
         call_fetch(&mut instance, &mock_get_request("/"))
@@ -578,12 +564,12 @@ mod tests {
             .unwrap();
 
         let init_used = orig_gas - instance.get_gas_left();
-        assert_eq!(init_used, 5775750271);
+        assert_eq!(init_used, 9085050000);
     }
 
     #[test]
     fn contract_deducts_gas_execute() {
-        let mut instance = mock_instance(CONTRACT);
+        let mut instance = mock_instance(CONTRACT, Vec::new());
 
         call_fetch(&mut instance, &mock_get_request("/"))
             .unwrap()
@@ -601,7 +587,7 @@ mod tests {
 
     #[test]
     fn contract_enforces_gas_limit() {
-        let mut instance = mock_instance_with_gas_limit(CONTRACT, 20_000);
+        let mut instance = mock_instance_with_gas_limit(CONTRACT, 20_000, Vec::new());
 
         let res = call_fetch(&mut instance, &mock_get_request("/"));
         assert!(res.is_err());

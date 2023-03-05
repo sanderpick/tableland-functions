@@ -10,6 +10,7 @@ struct Pet {
     name: String,
     r#type: String,
     owner_name: String,
+    area: String,
 }
 
 #[entry_point]
@@ -27,7 +28,7 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
         .get("/:type", |_, ctx, rctx| {
             if let Some(t) = rctx.param("type") {
                 let data = ctx.tableland.read(
-                    format!("select * from pets_31337_4 where type = '{}'", t).as_str(),
+                    format!("select * from pets_31337_4 as pets join homes_31337_2 as homes on pets.owner_name = homes.owner_name where type = '{}'", t).as_str(),
                     ReadOptions::default(),
                 )?;
                 let pets: Vec<Pet> = serde_json::from_value(data)?;
@@ -43,7 +44,7 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
                             p { "We have some pets:" }
                             ul {
                                 @for pet in &pets {
-                                    @let text = format!("{} is a {} owned by {}", pet.name, pet.r#type, pet.owner_name);
+                                    @let text = format!("{} is a {} {} owned by {}", pet.name, pet.area, pet.r#type, pet.owner_name);
                                     li { (text) }
                                 }
                             }
@@ -62,9 +63,11 @@ mod tests {
     use super::*;
     use tableland_std::testing::{mock_dependencies, mock_get_request};
 
+    const MOCK_QUERY_RESPONSE: &[u8] = include_bytes!("../testdata/response.json");
+
     #[test]
     fn call_fetch_works() {
-        let mut ctx = mock_dependencies();
+        let mut ctx = mock_dependencies(MOCK_QUERY_RESPONSE.to_vec());
         let mut res = fetch(mock_get_request("/dog"), ctx.as_mut()).unwrap();
         assert_eq!(res.status_code(), 200);
 

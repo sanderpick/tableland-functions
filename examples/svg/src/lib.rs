@@ -20,7 +20,7 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
         .get("/:id", |_, ctx, rctx| {
             if let Some(id) = rctx.param("id") {
                 let data = ctx.tableland.read(
-                    format!("select * from players_31337_7 where id = '{}'", id).as_str(),
+                    format!("select * from players_31337_7 where id = {}", id).as_str(),
                     ReadOptions::default(),
                 )?;
                 let player = match data.as_array().unwrap().get(0) {
@@ -61,9 +61,11 @@ mod tests {
     use super::*;
     use tableland_std::testing::{mock_dependencies, mock_get_request};
 
+    const MOCK_QUERY_RESPONSE: &[u8] = include_bytes!("../testdata/response.json");
+
     #[test]
     fn call_fetch_works() {
-        let mut ctx = mock_dependencies();
+        let mut ctx = mock_dependencies(MOCK_QUERY_RESPONSE.to_vec());
         let mut res = fetch(mock_get_request("/3"), ctx.as_mut()).unwrap();
         assert_eq!(res.status_code(), 200);
 

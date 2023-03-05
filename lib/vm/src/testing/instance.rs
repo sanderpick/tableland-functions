@@ -18,46 +18,36 @@ const DEFAULT_GAS_LIMIT: u64 = 500_000_000_000; // ~0.5ms
 const DEFAULT_MEMORY_LIMIT: Option<Size> = Some(Size::mebi(16));
 const DEFAULT_PRINT_DEBUG: bool = true;
 
-pub fn mock_instance(wasm: &[u8]) -> Instance<MockApi> {
+pub fn mock_instance(wasm: &[u8], data: Vec<u8>) -> Instance<MockApi> {
     mock_instance_with_options(
         wasm,
         MockInstanceOptions {
             ..Default::default()
         },
-    )
-}
-
-pub fn mock_instance_with_failing_api(
-    wasm: &[u8],
-    backend_error: &'static str,
-) -> Instance<MockApi> {
-    mock_instance_with_options(
-        wasm,
-        MockInstanceOptions {
-            backend_error: Some(backend_error),
-            ..Default::default()
-        },
+        data,
     )
 }
 
 /// Creates an instance from the given Wasm bytecode.
 /// The gas limit is measured in [CosmWasm gas](https://github.com/CosmWasm/cosmwasm/blob/main/docs/GAS.md).
-pub fn mock_instance_with_gas_limit(wasm: &[u8], gas_limit: u64) -> Instance<MockApi> {
+pub fn mock_instance_with_gas_limit(
+    wasm: &[u8],
+    gas_limit: u64,
+    data: Vec<u8>,
+) -> Instance<MockApi> {
     mock_instance_with_options(
         wasm,
         MockInstanceOptions {
             gas_limit,
             ..Default::default()
         },
+        data,
     )
 }
 
 #[derive(Debug)]
 pub struct MockInstanceOptions {
-    /// When set, all calls to the API fail with BackendError::Unknown containing this message
-    pub backend_error: Option<&'static str>,
-
-    // instance
+    /// Function capabilities (currently not used for Tableland Functions)
     pub available_capabilities: HashSet<String>,
     /// Gas limit measured in [CosmWasm gas](https://github.com/CosmWasm/cosmwasm/blob/main/docs/GAS.md).
     pub gas_limit: u64,
@@ -77,10 +67,6 @@ impl MockInstanceOptions {
 impl Default for MockInstanceOptions {
     fn default() -> Self {
         Self {
-            // dependencies
-            backend_error: None,
-
-            // instance
             available_capabilities: Self::default_capabilities(),
             gas_limit: DEFAULT_GAS_LIMIT,
             print_debug: DEFAULT_PRINT_DEBUG,
@@ -89,16 +75,16 @@ impl Default for MockInstanceOptions {
     }
 }
 
-pub fn mock_instance_with_options(wasm: &[u8], options: MockInstanceOptions) -> Instance<MockApi> {
+pub fn mock_instance_with_options(
+    wasm: &[u8],
+    options: MockInstanceOptions,
+    data: Vec<u8>,
+) -> Instance<MockApi> {
     check_wasm(wasm, &options.available_capabilities).unwrap();
 
-    let api = if let Some(backend_error) = options.backend_error {
-        MockApi::new_failing(backend_error)
-    } else {
-        MockApi::default()
+    let backend = Backend {
+        api: MockApi::new(data),
     };
-
-    let backend = Backend { api };
     let memory_limit = options.memory_limit;
     let options = InstanceOptions {
         gas_limit: options.gas_limit,

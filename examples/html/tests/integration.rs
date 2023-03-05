@@ -4,10 +4,11 @@ use tableland_vm::{
 };
 
 static WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/html.wasm");
+const MOCK_QUERY_RESPONSE: &[u8] = include_bytes!("../testdata/response.json");
 
 fn create_function() -> Instance<MockApi> {
     let gas_limit = 1_000_000_000_000; // ~1ms, enough for many executions within one instance
-    mock_instance_with_gas_limit(WASM, gas_limit)
+    mock_instance_with_gas_limit(WASM, gas_limit, MOCK_QUERY_RESPONSE.to_vec())
 }
 
 #[test]

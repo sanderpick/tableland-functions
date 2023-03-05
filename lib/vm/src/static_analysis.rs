@@ -69,7 +69,7 @@ mod tests {
     use parity_wasm::elements::Internal;
     use wasmer::{Cranelift, Store, Universal};
 
-    static CONTRACT: &[u8] = include_bytes!("../testdata/hackatom.wasm");
+    static CONTRACT: &[u8] = include_bytes!("../testdata/json.wasm");
     static CORRUPTED: &[u8] = include_bytes!("../testdata/corrupted.wasm");
 
     #[test]
@@ -83,7 +83,7 @@ mod tests {
             .entries()
             .iter()
             .filter(|entry| matches!(entry.internal(), Internal::Function(_)));
-        assert_eq!(exported_functions.count(), 8); // 4 required exports plus "execute", "migrate", "query" and "sudo"
+        assert_eq!(exported_functions.count(), 4); // 4 required exports
 
         let exported_memories = module
             .export_section()

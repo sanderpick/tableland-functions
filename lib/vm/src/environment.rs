@@ -311,18 +311,9 @@ mod tests {
     use crate::wasm_backend::compile;
     use wasmer::{imports, Function, Instance as WasmerInstance};
 
-    static CONTRACT: &[u8] = include_bytes!("../testdata/hackatom.wasm");
-
-    // prepared data
-    const INIT_KEY: &[u8] = b"foo";
-    const INIT_VALUE: &[u8] = b"bar";
-    // this account has some coins
-    const INIT_ADDR: &str = "someone";
-    const INIT_AMOUNT: u128 = 500;
-    const INIT_DENOM: &str = "TOKEN";
+    static CONTRACT: &[u8] = include_bytes!("../testdata/json.wasm");
 
     const TESTING_GAS_LIMIT: u64 = 500_000_000_000; // ~0.5ms
-    const DEFAULT_QUERY_GAS_LIMIT: u64 = 300_000;
     const TESTING_MEMORY_LIMIT: Option<Size> = Some(Size::mebi(16));
 
     fn make_instance(gas_limit: u64) -> (Environment<MockApi>, Box<WasmerInstance>) {
@@ -333,20 +324,9 @@ mod tests {
         // we need stubs for all required imports
         let import_obj = imports! {
             "env" => {
-                "db_read" => Function::new_native(store, |_a: u32| -> u32 { 0 }),
-                "db_write" => Function::new_native(store, |_a: u32, _b: u32| {}),
-                "db_remove" => Function::new_native(store, |_a: u32| {}),
-                "db_scan" => Function::new_native(store, |_a: u32, _b: u32, _c: i32| -> u32 { 0 }),
-                "db_next" => Function::new_native(store, |_a: u32| -> u32 { 0 }),
-                "query_chain" => Function::new_native(store, |_a: u32| -> u32 { 0 }),
-                "addr_validate" => Function::new_native(store, |_a: u32| -> u32 { 0 }),
-                "addr_canonicalize" => Function::new_native(store, |_a: u32, _b: u32| -> u32 { 0 }),
-                "addr_humanize" => Function::new_native(store, |_a: u32, _b: u32| -> u32 { 0 }),
-                "secp256k1_verify" => Function::new_native(store, |_a: u32, _b: u32, _c: u32| -> u32 { 0 }),
-                "secp256k1_recover_pubkey" => Function::new_native(store, |_a: u32, _b: u32, _c: u32| -> u64 { 0 }),
-                "ed25519_verify" => Function::new_native(store, |_a: u32, _b: u32, _c: u32| -> u32 { 0 }),
-                "ed25519_batch_verify" => Function::new_native(store, |_a: u32, _b: u32, _c: u32| -> u32 { 0 }),
+                "read" => Function::new_native(store, |_a: u32| -> u32 { 0 }),
                 "debug" => Function::new_native(store, |_a: u32| {}),
+                "abort" => Function::new_native(store, |_a: u32| {}),
             },
         };
         let instance = Box::from(WasmerInstance::new(&module, &import_obj).unwrap());
