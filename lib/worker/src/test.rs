@@ -7,12 +7,9 @@ use tableland_vm::{
 use crate::backend::Api;
 use crate::instance::ApiInstanceOptions;
 
-const EXAMPLE_JSON_WASM: &[u8] =
-    include_bytes!("../../../examples/json/target/wasm32-unknown-unknown/release/json.wasm");
-const EXAMPLE_HTML_WASM: &[u8] =
-    include_bytes!("../../../examples/html/target/wasm32-unknown-unknown/release/html.wasm");
-const EXAMPLE_SVG_WASM: &[u8] =
-    include_bytes!("../../../examples/svg/target/wasm32-unknown-unknown/release/svg.wasm");
+const EXAMPLE_JSON_WASM: &[u8] = include_bytes!("../testdata/json.wasm");
+const EXAMPLE_HTML_WASM: &[u8] = include_bytes!("../testdata/html.wasm");
+const EXAMPLE_SVG_WASM: &[u8] = include_bytes!("../testdata/svg.wasm");
 
 const EXAMPLE_JSON_QUERY_RESPONSE: &[u8] =
     include_bytes!("../../../examples/json/testdata/response.json");

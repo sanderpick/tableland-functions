@@ -57,7 +57,7 @@ mod tests {
         client.respond_with(b"[{}]".to_vec());
         let api = Api::new(client);
         api.read(
-            "select * from my_table",
+            "select * from my_table;",
             ReadOptions::default(),
             DEFAULT_QUERY_GAS_LIMIT,
         )

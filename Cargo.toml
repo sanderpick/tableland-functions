@@ -1,16 +1,7 @@
 [workspace]
-exclude = [
-    "examples/json",
-    "examples/html",
-    "examples/svg",
+exclude = ["examples/json", "examples/html", "examples/svg",
 ]
-members = [
-    "lib/client",
-    "lib/client/types",
-    "lib/derive",
-    "lib/std",
-    "lib/vm",
-    "lib/worker",
+members = ["lib/client", "lib/client/types", "lib/derive", "lib/std", "lib/vm", "lib/worker",
 ]
 
 [workspace.package]

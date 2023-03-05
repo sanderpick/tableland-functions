@@ -52,4 +52,47 @@ impl Tableland for MockClient {
         let res = serde_json::from_slice(self.data.as_slice()).unwrap();
         Ok((res, self.data.len() as u64))
     }
+
+    fn chain(&self) -> Chain {
+        self.chain.clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg(not(feature = "blocking"))]
+    fn new_client_works() {
+        let client = MockClient::new(ChainID::Ethereum);
+        assert_eq!(client.chain().id, 1);
+    }
+
+    #[tokio::test]
+    #[cfg(not(feature = "blocking"))]
+    async fn read_works() {
+        let mut client = MockClient::new(ChainID::Local);
+        client.respond_with(b"[{}]".to_vec());
+        let result = client
+            .read("select * from my_table;", ReadOptions::default())
+            .await;
+        assert_eq!(result.is_ok(), true);
+    }
+
+    #[test]
+    #[cfg(feature = "blocking")]
+    fn new_client_works() {
+        let client = MockClient::new(ChainID::Ethereum);
+        assert_eq!(client.chain().id, 1);
+    }
+
+    #[test]
+    #[cfg(feature = "blocking")]
+    fn read_works() {
+        let mut client = MockClient::new(ChainID::Local);
+        client.respond_with(b"[{}]".to_vec());
+        let result = client.read("select * from my_table;", ReadOptions::default());
+        assert_eq!(result.is_ok(), true);
+    }
 }

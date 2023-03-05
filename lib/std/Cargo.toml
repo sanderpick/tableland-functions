@@ -10,12 +10,9 @@ repository = { workspace = true }
 version = { workspace = true }
 
 [features]
-default = ["abort"]
 abort = []
-# backtraces provides much better context at runtime errors (in non-wasm code)
-# at the cost of a bit of code size and performance.
-# This feature requires Rust nightly because it depends on the unstable backtrace feature.
 backtraces = []
+default = ["abort"]
 
 [dependencies]
 http = "0.2.9"

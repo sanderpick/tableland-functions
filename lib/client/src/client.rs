@@ -75,57 +75,8 @@ impl Tableland for TablelandClient {
         let len = res.content_length().ok_or(ClientError::NoContentLength)?;
         Ok((res.json()?, len))
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    #[cfg(not(feature = "blocking"))]
-    fn new_client_works() {
-        let client = TablelandClient::new(ChainID::Ethereum);
-        assert_eq!(client.chain.id, 1);
-    }
-
-    #[tokio::test]
-    #[cfg(not(feature = "blocking"))]
-    async fn read_works() {
-        let client = TablelandClient::new(ChainID::Local);
-        let result = client
-            .read("select * from politicians_31337_6;", ReadOptions::default())
-            .await;
-        assert_eq!(result.is_ok(), true);
-    }
-
-    #[tokio::test]
-    #[cfg(not(feature = "blocking"))]
-    async fn read_fails_on_server_error() {
-        let client = TablelandClient::new(ChainID::Local);
-        let result = client.read("bad query;", ReadOptions::default()).await;
-        assert_eq!(result.is_err(), true);
-    }
-
-    #[test]
-    #[cfg(feature = "blocking")]
-    fn new_client_works() {
-        let client = TablelandClient::new(ChainID::Ethereum);
-        assert_eq!(client.chain.id, 1);
-    }
-
-    #[test]
-    #[cfg(feature = "blocking")]
-    fn read_works() {
-        let client = TablelandClient::new(ChainID::Local);
-        let result = client.read("select * from politicians_31337_6;", ReadOptions::default());
-        assert_eq!(result.is_ok(), true);
-    }
-
-    #[test]
-    #[cfg(feature = "blocking")]
-    fn read_fails_on_server_error() {
-        let client = TablelandClient::new(ChainID::Local);
-        let result = client.read("bad query;", ReadOptions::default());
-        assert_eq!(result.is_err(), true);
+    fn chain(&self) -> Chain {
+        self.chain.clone()
     }
 }

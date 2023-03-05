@@ -77,7 +77,7 @@ mod tests {
         let api = MockApi::new(b"[]".to_vec());
 
         api.read(
-            "select * from my_table",
+            "select * from my_table;",
             ReadOptions::default(),
             DEFAULT_QUERY_GAS_LIMIT,
         )

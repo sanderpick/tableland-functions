@@ -28,7 +28,7 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
         .get("/:type", |_, ctx, rctx| {
             if let Some(t) = rctx.param("type") {
                 let data = ctx.tableland.read(
-                    format!("select * from pets_31337_4 as pets join homes_31337_2 as homes on pets.owner_name = homes.owner_name where type = '{}'", t).as_str(),
+                    format!("select * from pets_31337_4 as pets join homes_31337_2 as homes on pets.owner_name = homes.owner_name where type = '{}';", t).as_str(),
                     ReadOptions::default(),
                 )?;
                 let pets: Vec<Pet> = serde_json::from_value(data)?;

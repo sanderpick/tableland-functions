@@ -20,7 +20,7 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
         .get("/:id", |_, ctx, rctx| {
             if let Some(id) = rctx.param("id") {
                 let data = ctx.tableland.read(
-                    format!("select * from players_31337_7 where id = {}", id).as_str(),
+                    format!("select * from players_31337_7 where id = {};", id).as_str(),
                     ReadOptions::default(),
                 )?;
                 let player = match data.as_array().unwrap().get(0) {

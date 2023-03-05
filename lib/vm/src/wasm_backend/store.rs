@@ -1,7 +1,7 @@
 use std::sync::Arc;
-#[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+#[cfg(any(target_arch = "arm", target_arch = "aarch64", target_os = "windows"))]
 use wasmer::Cranelift;
-#[cfg(not(any(target_arch = "arm", target_arch = "aarch64")))]
+#[cfg(not(any(target_arch = "arm", target_arch = "aarch64", target_os = "windows")))]
 use wasmer::Singlepass;
 use wasmer::{
     wasmparser::Operator, BaseTunables, CompilerConfig, Engine, ModuleMiddleware, Pages, Store,
@@ -40,7 +40,7 @@ pub fn make_compile_time_store(
     let deterministic = Arc::new(Gatekeeper::default());
     let metering = Arc::new(Metering::new(gas_limit, cost));
 
-    #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+    #[cfg(any(target_arch = "arm", target_arch = "aarch64", target_os = "windows"))]
     {
         let mut config = Cranelift::default();
         for middleware in middlewares {
@@ -52,7 +52,7 @@ pub fn make_compile_time_store(
         make_store_with_engine(&engine, memory_limit)
     }
 
-    #[cfg(not(any(target_arch = "arm", target_arch = "aarch64")))]
+    #[cfg(not(any(target_arch = "arm", target_arch = "aarch64", target_os = "windows")))]
     {
         let mut config = Singlepass::default();
         for middleware in middlewares {
