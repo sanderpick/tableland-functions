@@ -59,10 +59,10 @@ impl<D> RouteContext<D> {
     }
 }
 
-impl Router<()> {
+impl Default for Router<()> {
     /// Construct a new `Router`. Or, call `Router::with_data(D)` to add arbitrary data that will be
     /// available to your various routes.
-    pub fn new() -> Self {
+    fn default() -> Self {
         Self::with_data(())
     }
 }
@@ -154,7 +154,7 @@ impl<D> Router<D> {
         let (handlers, data, or_else_any_method_handler) = self.split();
 
         if let Some(handlers) = handlers.get(&req.method()) {
-            if let Ok(Match { value, params }) = handlers.at(&req.uri().path()) {
+            if let Ok(Match { value, params }) = handlers.at(req.uri().path()) {
                 let route_info = RouteContext {
                     data,
                     params: params.into(),
@@ -170,13 +170,13 @@ impl<D> Router<D> {
                 continue;
             }
             if let Some(handlers) = handlers.get(&method) {
-                if let Ok(Match { .. }) = handlers.at(&req.uri().path()) {
+                if let Ok(Match { .. }) = handlers.at(req.uri().path()) {
                     return Response::error("Method Not Allowed", 405);
                 }
             }
         }
 
-        if let Ok(Match { value, params }) = or_else_any_method_handler.at(&req.uri().path()) {
+        if let Ok(Match { value, params }) = or_else_any_method_handler.at(req.uri().path()) {
             let route_info = RouteContext {
                 data,
                 params: params.into(),

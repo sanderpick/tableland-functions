@@ -28,7 +28,7 @@ pub struct Chain {
 impl Chain {
     #[allow(dead_code)]
     fn can_relay_writes(&self) -> bool {
-        &self.endpoint != MAINNET_URL
+        self.endpoint != MAINNET_URL
     }
 }
 

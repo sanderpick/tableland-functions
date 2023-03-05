@@ -1,5 +1,3 @@
-extern crate core;
-
 mod chains;
 mod client;
 mod errors;
@@ -9,9 +7,11 @@ pub use chains::{get_chain, ChainID};
 pub use client::TablelandClient;
 pub use errors::ClientError;
 
+use async_trait::async_trait;
 use serde_json::Value;
 use tableland_client_types::ReadOptions;
 
+#[async_trait]
 pub trait Tableland: Clone + Send {
     fn new(chain_id: ChainID) -> Self;
 

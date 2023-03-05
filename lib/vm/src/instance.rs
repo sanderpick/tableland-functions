@@ -13,7 +13,7 @@ use crate::memory::{read_region, write_region};
 use crate::size::Size;
 use crate::wasm_backend::compile;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Default)]
 pub struct GasReport {
     /// The original limit the instance was created with
     pub limit: u64,
@@ -24,17 +24,6 @@ pub struct GasReport {
     /// The amount of gas that was spend and metered internally (i.e. by executing Wasm and calling
     /// API methods which are not metered externally)
     pub used_internally: u64,
-}
-
-impl Default for GasReport {
-    fn default() -> Self {
-        GasReport {
-            limit: 0,
-            remaining: 0,
-            used_externally: 0,
-            used_internally: 0,
-        }
-    }
 }
 
 #[derive(Copy, Clone, Debug)]

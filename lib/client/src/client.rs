@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 #[cfg(feature = "blocking")]
 use reqwest::blocking::Client;
 #[cfg(not(feature = "blocking"))]
@@ -18,6 +19,7 @@ pub struct TablelandClient {
     chain: Chain,
 }
 
+#[async_trait]
 impl Tableland for TablelandClient {
     fn new(chain_id: ChainID) -> Self {
         let http_client = Client::builder()
@@ -44,7 +46,7 @@ impl Tableland for TablelandClient {
         }
         let res = self
             .http_client
-            .get(format!("{}{}", self.chain.endpoint.to_string(), QUERY_PATH))
+            .get(format!("{}{}", self.chain.endpoint, QUERY_PATH))
             .query(&params)
             .send()
             .await?
@@ -66,7 +68,7 @@ impl Tableland for TablelandClient {
 
         let res = self
             .http_client
-            .get(format!("{}{}", self.chain.endpoint.to_string(), QUERY_PATH))
+            .get(format!("{}{}", self.chain.endpoint, QUERY_PATH))
             .query(&params)
             .send()?
             .error_for_status()?;

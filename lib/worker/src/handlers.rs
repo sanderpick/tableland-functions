@@ -41,7 +41,7 @@ pub async fn invoke_runtime(
         .as_str()
         .trim_start_matches(format!("/v1/functions/{}", cid).as_str())
         .to_string();
-    if query.len() > 0 {
+    if !query.is_empty() {
         path = format!("{}?{}", path, query);
     }
     if path.is_empty() {
@@ -63,16 +63,12 @@ pub async fn invoke_runtime(
         Err(e) => {
             eprintln!("error fetching {}: {}", cid, e);
             return match e {
-                StoreError::Vm(er) => match er {
-                    VmError::GasDepletion { .. } => Ok(build_response(
-                        StatusCode::PAYMENT_REQUIRED,
-                        HeaderMap::new(),
-                        report,
-                        Vec::new(),
-                    )),
-                    // todo handle other errors
-                    _ => Err(warp::reject::reject()),
-                },
+                StoreError::Vm(VmError::GasDepletion { .. }) => Ok(build_response(
+                    StatusCode::PAYMENT_REQUIRED,
+                    HeaderMap::new(),
+                    report,
+                    Vec::new(),
+                )),
                 // todo handle other errors
                 _ => Err(warp::reject::reject()),
             };
@@ -88,12 +84,12 @@ pub async fn invoke_runtime(
 }
 
 fn body_allowed(method: Method, body_length: usize) -> bool {
-    return match method {
+    match method {
         Method::GET | Method::DELETE | Method::TRACE | Method::OPTIONS | Method::HEAD => {
             body_length == 0
         }
         _ => body_length <= MAX_BODY_LENGTH,
-    };
+    }
 }
 
 fn build_response(

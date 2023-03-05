@@ -28,7 +28,7 @@ async fn main() {
         .and(warp::path::full())
         .and(
             warp::query::raw()
-                .or(warp::any().map(|| String::default()))
+                .or(warp::any().map(String::default))
                 .unify(),
         )
         .and(warp::header::headers_cloned())

@@ -18,7 +18,7 @@ pub fn fetch(req: Request, ctx: CtxMut) -> Result<Response> {
     // Optionally, use the Router to handle matching endpoints, use ":name" placeholders, or "*name"
     // catch-alls to match on specific patterns. Alternatively, use `Router::with_data(D)` to
     // provide arbitrary data that will be accessible in each route via the `ctx.data()` method.
-    let router = Router::new();
+    let router = Router::default();
 
     // Add as many routes as your Function needs! Each route will get a `Request` for handling HTTP
     // functionality and a `RouteContext` which you can use to get route parameters.

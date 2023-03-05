@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use serde_json::Value;
 use tableland_client_types::ReadOptions;
 
@@ -18,6 +19,7 @@ impl MockClient {
     }
 }
 
+#[async_trait]
 impl Tableland for MockClient {
     fn new(chain_id: ChainID) -> Self {
         let chain = get_chain(chain_id);
@@ -33,7 +35,7 @@ impl Tableland for MockClient {
         _statement: &str,
         _options: ReadOptions,
     ) -> Result<(Value, u64), ClientError> {
-        if self.data.len() == 0 {
+        if self.data.is_empty() {
             panic!("Set data with 'MockClient::respond_with'")
         }
 
@@ -43,7 +45,7 @@ impl Tableland for MockClient {
 
     #[cfg(feature = "blocking")]
     fn read(&self, _statement: &str, _options: ReadOptions) -> Result<(Value, u64), ClientError> {
-        if self.data.len() == 0 {
+        if self.data.is_empty() {
             panic!("Set data with 'MockClient::respond_with'")
         }
 

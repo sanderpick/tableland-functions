@@ -26,21 +26,11 @@ fn instance_with_gas_limit(
     gas_limit: u64,
     client: MockClient,
 ) -> Instance<Api<MockClient>> {
-    instance_with_options(
-        wasm,
-        ApiInstanceOptions {
-            gas_limit,
-            ..Default::default()
-        },
-        client,
-    )
-}
+    let options = ApiInstanceOptions {
+        gas_limit,
+        ..Default::default()
+    };
 
-fn instance_with_options(
-    wasm: &[u8],
-    options: ApiInstanceOptions,
-    client: MockClient,
-) -> Instance<Api<MockClient>> {
     check_wasm(wasm, &options.available_capabilities).unwrap();
 
     let backend = Backend {

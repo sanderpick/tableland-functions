@@ -22,7 +22,7 @@ pub fn mock_backend() -> Backend<MockApi> {
 /// Zero-pads all human addresses to make them fit the canonical_length and
 /// trims off zeros for the reverse operation.
 /// This is not really smart, but allows us to see a difference (and consistent length for canonical adddresses).
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct MockApi {
     /// Data for mock query response.
     data: Vec<u8>,
@@ -31,12 +31,6 @@ pub struct MockApi {
 impl MockApi {
     pub fn new(data: Vec<u8>) -> Self {
         MockApi { data }
-    }
-}
-
-impl Default for MockApi {
-    fn default() -> Self {
-        MockApi { data: Vec::new() }
     }
 }
 

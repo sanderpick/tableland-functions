@@ -12,8 +12,5 @@ version = { workspace = true }
 [lib]
 proc-macro = true
 
-[features]
-default = []
-
 [dependencies]
 syn = { version = "1.0.109", features = ["full"] }

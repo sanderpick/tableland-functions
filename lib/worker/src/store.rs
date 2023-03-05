@@ -83,9 +83,9 @@ impl Store {
         match vmr.0 {
             Ok(r) => match r {
                 FuncResult::Ok(r) => (Ok(r), vmr.1),
-                FuncResult::Err(s) => return (Err(StoreError::func_err(s)), vmr.1),
+                FuncResult::Err(s) => (Err(StoreError::func_err(s)), vmr.1),
             },
-            Err(e) => return (Err(StoreError::from(e)), vmr.1),
+            Err(e) => (Err(StoreError::from(e)), vmr.1),
         }
     }
 
@@ -111,7 +111,7 @@ impl Store {
             self.fn_cache.wait().await.unwrap();
             Ok(true)
         } else {
-            return Err(StoreError::cache_err("failed to cache runtime"));
+            Err(StoreError::cache_err("failed to cache runtime"))
         }
     }
 }
@@ -132,11 +132,11 @@ pub enum StoreError {
 
 impl StoreError {
     pub fn func_err(msg: impl Into<String>) -> Self {
-        StoreError::Func { 0: msg.into() }
+        StoreError::Func(msg.into())
     }
 
     pub fn cache_err(msg: impl Into<String>) -> Self {
-        StoreError::Cache { 0: msg.into() }
+        StoreError::Cache(msg.into())
     }
 }
 

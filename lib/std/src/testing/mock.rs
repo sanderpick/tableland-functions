@@ -12,15 +12,9 @@ pub fn mock_dependencies(data: Vec<u8>) -> OwnedCtx<MockApi> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct MockApi {
     data: Vec<u8>,
-}
-
-impl Default for MockApi {
-    fn default() -> Self {
-        MockApi { data: Vec::new() }
-    }
 }
 
 impl MockApi {
