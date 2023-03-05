@@ -14,3 +14,6 @@ tableland write --file inmates.sql
 
 tableland create "bioguide_id text, position text, state text, party text, first_name text, last_name text, birth_year integer, service_start integer, service_end integer" --prefix politicians
 tableland write --file politicians.sql
+
+tableland create "id integer not null primary key, name text not null, health int not null" --prefix players
+tableland write --file players.sql

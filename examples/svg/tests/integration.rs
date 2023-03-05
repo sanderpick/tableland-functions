@@ -3,7 +3,7 @@ use tableland_vm::{
     Instance,
 };
 
-static WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/html.wasm");
+static WASM: &[u8] = include_bytes!("../target/wasm32-unknown-unknown/release/svg.wasm");
 
 fn create_function() -> Instance<MockApi> {
     let gas_limit = 1_000_000_000_000; // ~1ms, enough for many executions within one instance
@@ -13,11 +13,11 @@ fn create_function() -> Instance<MockApi> {
 #[test]
 fn call_fetch_works() {
     let mut instance = create_function();
-    let mut res = fetch(&mut instance, mock_get_request("/dog")).unwrap();
+    let mut res = fetch(&mut instance, mock_get_request("/3")).unwrap();
     assert_eq!(res.status_code(), 200);
 
-    let html = res.text().unwrap();
-    println!("{}", html);
+    let svg = res.text().unwrap();
+    println!("{}", svg);
 
     let report = instance.create_gas_report();
     println!("{:?}", report);

@@ -68,7 +68,7 @@ mod tests {
         let mut res = fetch(mock_get_request("/dog"), ctx.as_mut()).unwrap();
         assert_eq!(res.status_code(), 200);
 
-        let json = res.text().unwrap();
-        println!("{}", json);
+        let html = res.text().unwrap();
+        println!("{}", html);
     }
 }

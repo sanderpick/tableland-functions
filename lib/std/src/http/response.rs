@@ -61,6 +61,23 @@ impl Response {
         })
     }
 
+    /// Create a `Response` using the body encoded as SVG. Sets the associated `Content-Type`
+    /// header for the `Response` as `image/svg+xml`.
+    pub fn from_svg(svg: impl AsRef<str>) -> Result<Self> {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            CONTENT_TYPE,
+            HeaderValue::from_str("image/svg+xml").unwrap(),
+        );
+
+        let data = svg.as_ref().as_bytes();
+        Ok(Self {
+            body: ResponseBody::Body(ByteBuf::from(data)),
+            headers,
+            status_code: 200,
+        })
+    }
+
     /// Create a `Response` using unprocessed bytes provided. Sets the associated `Content-Type`
     /// header for the `Response` as `application/octet-stream`.
     pub fn from_bytes(bytes: Vec<u8>) -> Result<Self> {

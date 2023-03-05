@@ -2,6 +2,7 @@
 exclude = [
     "examples/json",
     "examples/html",
+    "examples/svg",
 ]
 members = [
     "lib/client",

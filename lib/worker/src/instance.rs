@@ -3,7 +3,7 @@ use tableland_vm::{capabilities_from_csv, check_wasm, Backend, Instance, Instanc
 
 use crate::backend::Api;
 
-const DEFAULT_GAS_LIMIT: u64 = 500_000_000_000; // ~0.5ms
+const DEFAULT_GAS_LIMIT: u64 = 500_000_000_000_000;
 const DEFAULT_MEMORY_LIMIT: Option<Size> = Some(Size::mebi(16));
 const DEFAULT_PRINT_DEBUG: bool = true;
 
