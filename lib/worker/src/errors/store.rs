@@ -1,11 +1,13 @@
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Error, Clone, Debug)]
 pub enum StoreError {
     #[error("VM error: {0}")]
-    Vm(tableland_vm::VmError),
+    Vm(String),
     #[error("Function error: {0}")]
     Func(String),
+    #[error("Payload too large")]
+    PayloadTooLarge,
     #[error("IPFS error: {0}")]
     Ipfs(String),
     #[error("WASM cache error: {0}")]
@@ -15,11 +17,11 @@ pub enum StoreError {
 }
 
 impl StoreError {
-    pub fn func_err(msg: impl Into<String>) -> Self {
+    pub(crate) fn func_err(msg: impl Into<String>) -> Self {
         StoreError::Func(msg.into())
     }
 
-    pub fn cache_err(msg: impl Into<String>) -> Self {
+    pub(crate) fn cache_err(msg: impl Into<String>) -> Self {
         StoreError::Cache(msg.into())
     }
 }
@@ -38,7 +40,7 @@ impl From<reqwest::Error> for StoreError {
 
 impl From<tableland_vm::VmError> for StoreError {
     fn from(e: tableland_vm::VmError) -> Self {
-        StoreError::Vm(e)
+        StoreError::Vm(e.to_string())
     }
 }
 

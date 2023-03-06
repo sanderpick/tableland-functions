@@ -1,7 +1,7 @@
 use bytes::Bytes;
 use serde_bytes::ByteBuf;
 use tableland_std::Request;
-use tableland_vm::{GasReport, VmError};
+use tableland_vm::GasReport;
 use warp::{
     http::Response as WarpResponse,
     http::{HeaderMap, HeaderValue, Method, StatusCode, Uri},
@@ -9,7 +9,7 @@ use warp::{
     Rejection, Reply,
 };
 
-use crate::errors::StoreError;
+use crate::errors::{StoreError, WorkerError};
 use crate::store::Store;
 
 const MAX_BODY_LENGTH: usize = 1024 * 1024;
@@ -17,11 +17,10 @@ const MAX_BODY_LENGTH: usize = 1024 * 1024;
 pub async fn add_runtime(cid: String, store: Store) -> Result<impl Reply, Rejection> {
     store.add(cid.clone()).await.map_err(|e| {
         eprint!("error saving {}: {}", cid, e);
-        warp::reject::reject()
+        warp::reject::custom(WorkerError::new(e, None))
     })?;
 
     println!("added {}", cid);
-
     Ok("success")
 }
 
@@ -35,7 +34,10 @@ pub async fn invoke_runtime(
     body: Bytes,
 ) -> Result<impl Reply, Rejection> {
     if !body_allowed(method.clone(), body.len()) {
-        return Err(warp::reject::reject());
+        return Err(warp::reject::custom(WorkerError::new(
+            StoreError::PayloadTooLarge,
+            None,
+        )));
     }
 
     let mut path = full_path
@@ -56,23 +58,12 @@ pub async fn invoke_runtime(
     let req = Request::new(uri, method, headers, bbody);
 
     println!("{} {}{}", req.method(), cid, path);
-
     let out = store.run(cid.clone(), req).await;
     let report = out.1;
     let mut res = match out.0 {
         Ok(r) => r,
         Err(e) => {
-            eprintln!("error fetching {}: {}", cid, e);
-            return match e {
-                StoreError::Vm(VmError::GasDepletion { .. }) => Ok(build_response(
-                    StatusCode::PAYMENT_REQUIRED,
-                    HeaderMap::new(),
-                    report,
-                    Vec::new(),
-                )),
-                // todo handle other errors
-                _ => Err(warp::reject::reject()),
-            };
+            return Err(warp::reject::custom(WorkerError::new(e, Some(report))));
         }
     };
 
