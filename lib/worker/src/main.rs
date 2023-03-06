@@ -1,5 +1,6 @@
 mod backend;
 mod config;
+mod errors;
 mod handlers;
 mod instance;
 mod store;

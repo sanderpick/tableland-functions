@@ -9,7 +9,8 @@ use warp::{
     Rejection, Reply,
 };
 
-use crate::store::{Store, StoreError};
+use crate::errors::StoreError;
+use crate::store::Store;
 
 const MAX_BODY_LENGTH: usize = 1024 * 1024;
 
