@@ -1,15 +1,19 @@
 mod backend;
 mod config;
+mod errors;
 mod handlers;
 mod instance;
 mod store;
 #[cfg(test)]
 mod test;
 
+use serde::Serialize;
 use std::{convert::Infallible, net::SocketAddr};
+use tableland_vm::GasReport;
 use warp::{http::StatusCode, Filter, Rejection, Reply};
 
 use crate::config::Config;
+use crate::errors::{StoreError, WorkerError};
 use crate::handlers::{add_runtime, invoke_runtime};
 use crate::store::Store;
 
@@ -50,13 +54,39 @@ fn with_store(store: Store) -> impl Filter<Extract = (Store,), Error = Infallibl
     warp::any().map(move || store.clone())
 }
 
+#[derive(Serialize)]
+struct ErrorMessage {
+    code: u16,
+    message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    gas: Option<GasReport>,
+}
+
 async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
+    let mut report: Option<GasReport> = None;
     let (code, message) = if err.is_not_found() {
         (StatusCode::NOT_FOUND, "Not Found".to_string())
-    } else if err.find::<warp::reject::PayloadTooLarge>().is_some() {
-        (StatusCode::BAD_REQUEST, "Payload too large".to_string())
-    } else if err.find::<warp::reject::LengthRequired>().is_some() {
-        (StatusCode::LENGTH_REQUIRED, "Length required".to_string())
+    } else if let Some(e) = err.find::<WorkerError>() {
+        report = e.report.clone();
+        match e.error.clone() {
+            StoreError::Vm(e) => {
+                if e == "Ran out of gas during function execution" {
+                    (StatusCode::PAYMENT_REQUIRED, e.to_string())
+                } else {
+                    (StatusCode::BAD_REQUEST, e.to_string())
+                }
+            }
+            StoreError::Func(e) => (StatusCode::BAD_REQUEST, e.to_string()),
+            StoreError::PayloadTooLarge => (
+                StatusCode::PAYLOAD_TOO_LARGE,
+                "Payload too large".to_string(),
+            ),
+            StoreError::Ipfs(e) => (StatusCode::NOT_FOUND, e.to_string()),
+            StoreError::Cache(e) | StoreError::TaskJoin(e) => {
+                eprintln!("internal error: {:?}", err);
+                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+            }
+        }
     } else {
         eprintln!("unhandled error: {:?}", err);
         (
@@ -64,5 +94,12 @@ async fn handle_rejection(err: Rejection) -> Result<impl Reply, Infallible> {
             "Internal Server Error".to_string(),
         )
     };
-    Ok(warp::reply::with_status(message, code))
+
+    let json = warp::reply::json(&ErrorMessage {
+        code: code.as_u16(),
+        message: message.into(),
+        gas: report,
+    });
+
+    Ok(warp::reply::with_status(json, code))
 }

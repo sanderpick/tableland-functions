@@ -1,3 +1,4 @@
+use serde::Serialize;
 use std::collections::{HashMap, HashSet};
 use std::ptr::NonNull;
 use std::sync::Mutex;
@@ -13,7 +14,7 @@ use crate::memory::{read_region, write_region};
 use crate::size::Size;
 use crate::wasm_backend::compile;
 
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Serialize, Copy, Clone, Debug, Default)]
 pub struct GasReport {
     /// The original limit the instance was created with
     pub limit: u64,

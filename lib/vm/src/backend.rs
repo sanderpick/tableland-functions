@@ -86,7 +86,7 @@ pub trait BackendApi: Clone + Send {
 /// attached.
 pub type BackendResult<T> = (core::result::Result<T, BackendError>, GasInfo);
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Error, Clone, Debug, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum BackendError {
     #[error("Panic in FFI call")]

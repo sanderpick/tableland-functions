@@ -47,7 +47,7 @@ pub enum VmError {
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,
     },
-    #[error("Ran out of gas during contract execution")]
+    #[error("Ran out of gas during function execution")]
     GasDepletion {
         #[cfg(feature = "backtraces")]
         backtrace: Backtrace,

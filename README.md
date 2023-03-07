@@ -39,7 +39,7 @@ This repo contains the following crates:
 
 The POC uses IPFS to make the WASM binaries available to validators. However, it is possible to consider using a more resilient layer, such as Filecoin.
 
-![tableland-functions](https://user-images.githubusercontent.com/361000/223290376-536d7a96-76e2-42ee-899f-2fc1011d47e8.png)
+![tableland-functions](https://user-images.githubusercontent.com/361000/223291893-952296a5-7dff-4005-8c20-b0e0c4d7036a.png)
 
 ## Why?
 
