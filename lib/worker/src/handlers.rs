@@ -55,7 +55,7 @@ pub async fn invoke_runtime(
         false => Some(ByteBuf::from(body.to_vec())),
         true => None,
     };
-    let req = Request::new(uri, method, headers, bbody);
+    let req = Request::new(cid.clone(), uri, method, headers, bbody);
 
     println!("{} {}{}", req.method(), cid, path);
     let out = store.run(cid.clone(), req).await;

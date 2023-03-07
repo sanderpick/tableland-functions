@@ -43,6 +43,7 @@ pub struct Router<D> {
 /// as KV Stores, Durable Objects, Variables, and Secrets).
 pub struct RouteContext<D> {
     pub data: D,
+    id: String,
     params: RouteParams,
 }
 
@@ -51,6 +52,11 @@ impl<D> RouteContext<D> {
     #[deprecated(since = "0.0.8", note = "please use the `data` field directly")]
     pub fn data(&self) -> &D {
         &self.data
+    }
+
+    /// Get the target function content identifier.
+    pub fn id(&self) -> String {
+        self.id.clone()
     }
 
     /// Get a URL parameter parsed by the router, by the name of its match or wildecard placeholder.
@@ -157,6 +163,7 @@ impl<D> Router<D> {
             if let Ok(Match { value, params }) = handlers.at(req.uri().path()) {
                 let route_info = RouteContext {
                     data,
+                    id: req.id(),
                     params: params.into(),
                 };
                 return match value {
@@ -179,6 +186,7 @@ impl<D> Router<D> {
         if let Ok(Match { value, params }) = or_else_any_method_handler.at(req.uri().path()) {
             let route_info = RouteContext {
                 data,
+                id: req.id(),
                 params: params.into(),
             };
             return match value {

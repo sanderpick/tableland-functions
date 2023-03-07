@@ -35,6 +35,7 @@ impl Api for MockApi {
 
 pub fn mock_get_request(path: &'static str) -> Request {
     Request::new(
+        "mock_id".to_string(),
         http::uri::Uri::from_static(path),
         http::method::Method::GET,
         http::header::HeaderMap::default(),

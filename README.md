@@ -70,7 +70,7 @@ It comes as no surprise that many Database Software as a Service (DB SaaS) offer
 ### Requirements
 
 - Functions should be deterministic. The output should always be the same for a given Tableland network state. This means no float types or external network access.
-- Function execution should be quantifiable. The amount of work required to execute a function should be quantifiable in some unit for a given Tableland network state. Luckily, Wasmer provides a metering middleware that is used to calculate function “gas”. `tableland-functions` also has a notion of “external gas”, which is currently based on query statement and response size.
+- Function execution should be quantifiable. The amount of work required to execute a function should be quantifiable in some unit for a given Tableland network state. Luckily, Wasmer provides a [metering feature](https://docs.wasmer.io/ecosystem/wasmer/wasmer-features) that is used to track function “gas”. `tableland-functions` also has a notion of “external gas” (adapted from [cosmwasm](https://github.com/CosmWasm/cosmwasm)), which is currently based on query statement and response size (data egress). In the future, the external gas should provide a more accurate representation of the work performed by [`go-tableland`](https://github.com/tablelandnetwork/go-tableland) to handle a read query. This might involve measuring statement complexity or simply measuring the time it takes to handle a query.
 - Cold start for functions should be fast. Currently, it takes ~2 seconds, but there is plenty of room for optimization.
 - Functions should execute quickly, and Wasmer is a very fast option. Currently, most of the latency is due to the validator. The example JSON API responds locally in approximately 5-10 milliseconds. This is actually the metric we care about because `tableland-functions` is intended to be localized with validators.
 - WASM binaries should be relatively small. For example, the JSON API provided here builds to around 180KB. However, you can reduce this to less than 50KB by using custom HTTP types across the WASM bridge, and by using a more constrained JSON serialization library such as [serde-json-wasm](https://github.com/CosmWasm/serde-json-wasm). Additionally, there is ample opportunity for further optimization, such as compressing the binaries using a tool like [UPX](https://github.com/upx/upx).
@@ -160,6 +160,9 @@ Target `wasm32-unknown-unknown` to build each example:
 ```bash
 cd examples/json
 cargo build --target wasm32-unknown-unknown --release
+
+# turn on backtraces to propogate function panics
+cargo build --target wasm32-unknown-unknown --release --features=backtraces
 
 # or build a smaller binary (requires nightly toolchain)
 cargo +nightly build -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort --target wasm32-unknown-unknown --release

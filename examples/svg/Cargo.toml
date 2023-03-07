@@ -24,9 +24,8 @@ backtraces = ["tableland_std/backtraces", "tableland_vm/backtraces"]
 default = []
 
 [dependencies]
-handlebars = "4.3.6"
-indoc = "2.0.0"
 serde_json = "1.0.93"
+strfmt = "0.2.4"
 tableland_client_types = { path = "../../lib/client/types" }
 tableland_std = { path = "../../lib/std" }
 
