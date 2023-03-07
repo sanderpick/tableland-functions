@@ -11,6 +11,7 @@
 - [tableland-functions](#tableland-functions)
   - [Table of Contents](#table-of-contents)
   - [Background](#background)
+    - [POC design](#poc-design)
     - [Why?](#why)
     - [Tableland Functions](#tableland-functions)
     - [Requirements](#requirements)
