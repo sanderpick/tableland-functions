@@ -29,17 +29,17 @@
 `tableland-functions` is an experimental Rust SDK and [Wasmer](https://wasmer.io/) runtime for edge function handling on the Tableland network. The architecture is based on [cosmwasm](https://github.com/CosmWasm/cosmwasm) and the guest function interface is inspired by Cloudflares's [workers-rs](https://github.com/cloudflare/workers-rs). 
 
 This repo contains the following crates:
-- `tableland_std`: Wasmer compiler, import and export definitions, and type bindings for guest function development. 
-- `tableland_derive`: Macros for guest function development in Rust.
-- `tableland_vm`: Wasmer host environment and imports API. The current import API provides a function request context with a `read` method for executing Tableland read-only queries.
-- `tableland_worker`: HTTP server and Wasmer instance cache. The Worker reponds to `evm-tableland` events forwarded by a validator, which trigger an instantiation of a WASM binary from IPFS. WASM binaries are compiled, cached, and made available over the Worker's `/v1/functions/{wasm_cid}` endpoint. See below for a diagram of how this works.
-- `tableland_client`: A (currently) read-only Tableland client.
+- [`tableland_std`](/lib/std)`: Wasmer compiler, import and export definitions, and type bindings for guest function development. 
+- [`tableland_derive`](/lib/std): Macros for guest function development in Rust.
+- [`tableland_vm`](/lib/std): Wasmer host environment and imports API. The current import API provides a function request context with a `read` method for executing Tableland read-only queries.
+- [`tableland_worker`](/lib/std): HTTP server and Wasmer instance cache. The Worker reponds to [`evm-tableland`](https://github.com/tablelandnetwork/evm-tableland) events forwarded by a validator, which trigger an instantiation of a WASM binary from IPFS. WASM binaries are compiled, cached, and made available over the Worker's `/v1/functions/{wasm_cid}` endpoint. See below for a diagram of how this works.
+- [`tableland_client`](/lib/std): A (currently) read-only Tableland client.
 
 ## POC design
 
 The POC uses IPFS to make the WASM binaries available to validators. However, it is possible to consider using a more resilient layer, such as Filecoin.
 
-![tableland-functions](https://user-images.githubusercontent.com/361000/223288550-f4ed8a02-2b5b-4650-be51-bae24d4150e6.png)
+![tableland-functions](https://user-images.githubusercontent.com/361000/223290376-536d7a96-76e2-42ee-899f-2fc1011d47e8.png)
 
 ## Why?
 
@@ -147,7 +147,12 @@ curl -v http://localhost:3030/v1/functions/bafkreia4c7orjt23vorxg65vm7b34xvenkgx
 
 See [`examples`](/examples) for more, including HTML and SVG rendering.
 
-While not currently very useful, functions can also respond to POST requests with payloads. This could be helpful in triggering Tableland writes in conjunction with conditional authentication and ERC-4337 account abstraction for gasless transactions.
+The example tests use mock data. To run the examples in a real Worker, you will need to seed a local `go-validator` with data:
+
+```bash
+cd examples/data
+./generate.sh
+```
 
 Target `wasm32-unknown-unknown` to build each example:
 
@@ -160,6 +165,8 @@ cargo +nightly build -Z build-std=std,panic_abort -Z build-std-features=panic_im
 ```
 
 See [here](https://github.com/johnthagen/min-sized-rust) for a guide on minimizing the size of binaries. Note, not all recommendations apply to `wasm32-unknown-unknown`.
+
+While not currently very useful, functions can also respond to POST requests with payloads. This could be helpful in triggering Tableland writes in conjunction with conditional authentication and ERC-4337 account abstraction for gasless transactions.
 
 ## Run the Worker
 
@@ -186,7 +193,7 @@ gateway = 'http://localhost:8081/ipfs'
 
 # Development
 
-You will need a local [go-tableland](https://github.com/tablelandnetwork/go-tableland) validator and a local EVM node running the `TablelandTables` contract from [evm-tableland](https://github.com/tablelandnetwork/evm-tableland). The easiest way to do this is with [local-tableland](https://github.com/tablelandnetwork/local-tableland). However, `tableland-functions` requires specific branches of `go-tableland` and `evm-tableland` (see [here](https://github.com/tablelandnetwork/go-tableland/compare/main...sander/functions) and [here](https://github.com/tablelandnetwork/evm-tableland/compare/main...sander/functions). You may find it easier to spin the components manually.
+You will need a local [`go-tableland`](https://github.com/tablelandnetwork/go-tableland) validator and a local EVM node running the `TablelandTables` contract from [`evm-tableland`](https://github.com/tablelandnetwork/evm-tableland). The easiest way to do this is with [local-tableland](https://github.com/tablelandnetwork/local-tableland). However, `tableland-functions` requires specific branches of `go-tableland` and `evm-tableland` (see [here](https://github.com/tablelandnetwork/go-tableland/compare/main...sander/functions) and [here](https://github.com/tablelandnetwork/evm-tableland/compare/main...sander/functions). You may find it easier to spin the components manually.
 
 # Contributing
 
