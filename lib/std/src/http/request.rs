@@ -7,6 +7,8 @@ use serde_bytes::ByteBuf;
 /// Inspired by https://github.com/cloudflare/workers-rs/blob/main/worker/src/request.rs.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Request {
+    /// Target function content identifier.
+    id: String,
     #[serde(
         deserialize_with = "super::serde::deserialize_http_method",
         serialize_with = "super::serde::serialize_http_method"
@@ -27,13 +29,25 @@ pub struct Request {
 
 impl Request {
     /// Construct a new `Request` with an HTTP Method.
-    pub fn new(uri: Uri, method: Method, headers: HeaderMap, body: Option<ByteBuf>) -> Self {
+    pub fn new(
+        id: String,
+        uri: Uri,
+        method: Method,
+        headers: HeaderMap,
+        body: Option<ByteBuf>,
+    ) -> Self {
         Request {
+            id,
             uri,
             method,
             headers,
             body,
         }
+    }
+
+    /// Get the target function content identifier.
+    pub fn id(&self) -> String {
+        self.id.clone()
     }
 
     /// Get the `Headers` for this request.

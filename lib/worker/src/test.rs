@@ -15,8 +15,10 @@ const EXAMPLE_JSON_QUERY_RESPONSE: &[u8] =
     include_bytes!("../../../examples/json/testdata/response.json");
 const EXAMPLE_HTML_QUERY_RESPONSE: &[u8] =
     include_bytes!("../../../examples/html/testdata/response.json");
-const EXAMPLE_SVG_QUERY_RESPONSE: &[u8] =
-    include_bytes!("../../../examples/svg/testdata/response.json");
+const EXAMPLE_SVG_QUERY_RESPONSE1: &[u8] =
+    include_bytes!("../../../examples/svg/testdata/response1.json");
+const EXAMPLE_SVG_QUERY_RESPONSE2: &[u8] =
+    include_bytes!("../../../examples/svg/testdata/response2.json");
 
 fn instance_with_gas_limit(
     wasm: &[u8],
@@ -80,13 +82,32 @@ fn call_fetch_html_works() {
 }
 
 #[test]
-fn call_fetch_svg_works() {
+fn call_fetch_svg_metadata_works() {
     let gas_limit = 1_000_000_000_000; // ~1ms, enough for many executions within one instance
     let mut client = MockClient::new(ChainID::Local);
-    client.respond_with(EXAMPLE_SVG_QUERY_RESPONSE.to_vec());
+    client.respond_with(EXAMPLE_SVG_QUERY_RESPONSE1.to_vec());
     let mut instance = instance_with_gas_limit(EXAMPLE_SVG_WASM, gas_limit, client);
 
     let mut res = call_fetch(&mut instance, &mock_get_request("/3"))
+        .unwrap()
+        .unwrap();
+    assert_eq!(res.status_code(), 200);
+
+    let json = res.json::<Value>().unwrap();
+    println!("{}", json);
+
+    let report = instance.create_gas_report();
+    println!("{:?}", report);
+}
+
+#[test]
+fn call_fetch_svg_image_works() {
+    let gas_limit = 1_000_000_000_000; // ~1ms, enough for many executions within one instance
+    let mut client = MockClient::new(ChainID::Local);
+    client.respond_with(EXAMPLE_SVG_QUERY_RESPONSE2.to_vec());
+    let mut instance = instance_with_gas_limit(EXAMPLE_SVG_WASM, gas_limit, client);
+
+    let mut res = call_fetch(&mut instance, &mock_get_request("/3/image"))
         .unwrap()
         .unwrap();
     assert_eq!(res.status_code(), 200);
